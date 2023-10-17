@@ -655,25 +655,25 @@ class ViewController: UIViewController {
         checkDisplayBeFormatted()
     }
     
-    private func equalButtonAction() {
-        playTouchSound()
-    }
-    
-    private func plusButtonAction() {
-        playTouchSound()
-    }
-    
-    private func minusButtonAction() {
-        playTouchSound()
-    }
-    
-    private func timesButtonAction() {
-        playTouchSound()
-    }
-    
-    private func divideButtonAction() {
-        playTouchSound()
-    }
+//    private func equalButtonAction() {
+//        playTouchSound()
+//    }
+//    
+//    private func plusButtonAction() {
+//        playTouchSound()
+//    }
+//    
+//    private func minusButtonAction() {
+//        playTouchSound()
+//    }
+//    
+//    private func timesButtonAction() {
+//        playTouchSound()
+//    }
+//    
+//    private func divideButtonAction() {
+//        playTouchSound()
+//    }
     
     @objc private func buttonAction(_ sender: UIButton) {
         
