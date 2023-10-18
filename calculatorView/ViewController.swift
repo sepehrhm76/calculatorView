@@ -5,16 +5,21 @@
 //  Created by sepehr hajimohammadi on 10/4/23.
 //
 
+
 import UIKit
 import AudioToolbox
 
 class CustomButton: UIButton {
     var buttonColor: UIColor
+    var highlightColor: UIColor
     var fontSize: CGFloat
+    var buttonSize: CGSize
     
-    init(title: String, target: Any?, action: Selector, buttonColor: UIColor, fontSize: CGFloat) {
+    init(title: String, target: Any?, action: Selector, buttonColor: UIColor,highlightColor: UIColor ,fontSize: CGFloat, buttonSize: CGSize = CGSize(width: 88, height: 88)) {
         self.buttonColor = buttonColor
+        self.highlightColor = highlightColor
         self.fontSize = fontSize
+        self.buttonSize = buttonSize
         super.init(frame: .zero)
         self.backgroundColor = buttonColor
         self.translatesAutoresizingMaskIntoConstraints = false
@@ -22,8 +27,8 @@ class CustomButton: UIButton {
         self.titleLabel?.font = UIFont.systemFont(ofSize: fontSize, weight: .semibold)
         self.layer.cornerRadius = 44
         self.addTarget(target, action: action, for: .touchUpInside)
-        self.widthAnchor.constraint(equalToConstant: 88).isActive = true
-        self.heightAnchor.constraint(equalToConstant: 88).isActive = true
+        self.widthAnchor.constraint(equalToConstant: buttonSize.width).isActive = true
+        self.heightAnchor.constraint(equalToConstant: buttonSize.height).isActive = true
     }
     
     required init?(coder: NSCoder) {
@@ -37,18 +42,18 @@ class CustomButton: UIButton {
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesEnded(touches, with: event)
-//        unhighlightButton(color: <#UIColor#>)
+        unhighlightButton()
     }
     
     private func highlightButton() {
         UIView.animate(withDuration: 0, delay: 0, options: .allowUserInteraction, animations: {
-            self.backgroundColor = self.highlightedColor()
+            self.backgroundColor = self.highlightColor
         }, completion: nil)
     }
     
-    private func unhighlightButton(color: UIColor) {
+    private func unhighlightButton() {
         UIView.animate(withDuration: 0.5, delay: 0, options: .allowUserInteraction, animations: {
-            self.backgroundColor = color
+            self.backgroundColor = self.buttonColor
         }, completion: nil)
     }
     
@@ -63,7 +68,7 @@ class CustomGrayButton: CustomButton {
      let animationGrayColor = #colorLiteral(red: 0.8509804606, green: 0.850980401, blue: 0.850980401, alpha: 1)
     
     init(title: String, target: Any?, action: Selector) {
-        super.init(title: title, target: target, action: action, buttonColor: grayButtonColor, fontSize: 32)
+        super.init(title: title, target: target, action: action, buttonColor: grayButtonColor,highlightColor: animationGrayColor ,fontSize: 32)
         self.setTitleColor(.black, for: .normal)
         self.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(32), weight: .regular)
     }
@@ -78,7 +83,7 @@ class CustomOrangeButton: CustomButton {
      let animationOrangeColor = #colorLiteral(red: 0.9877180457, green: 0.7791343331, blue: 0.55313164, alpha: 1)
     
     init(title: String, target: Any?, action: Selector) {
-        super.init(title: title, target: target, action: action, buttonColor: orangeButtonsColor, fontSize: 42)
+        super.init(title: title, target: target, action: action, buttonColor: orangeButtonsColor,highlightColor: animationOrangeColor ,fontSize: 42)
     }
     
     required init?(coder: NSCoder) {
@@ -90,8 +95,8 @@ class CustomNumberButton: CustomButton {
      let numberButtonColor = #colorLiteral(red: 0.1999998987, green: 0.1999999881, blue: 0.1999999881, alpha: 1)
      let animationNumberColor = #colorLiteral(red: 0.4509803653, green: 0.4509803057, blue: 0.4509803057, alpha: 1)
     
-    init(title: String, target: Any?, action: Selector) {
-        super.init(title: title, target: target, action: action, buttonColor: numberButtonColor, fontSize: 32)
+    init(title: String, size : CGSize = CGSize(width: 88, height: 88), target: Any?, action: Selector) {
+        super.init(title: title, target: target, action: action, buttonColor: numberButtonColor,highlightColor: animationNumberColor ,fontSize: 32, buttonSize: size)
     }
     
     required init?(coder: NSCoder) {
@@ -234,16 +239,10 @@ class ViewController: UIViewController {
         return CustomNumberButton(title: "9", target: self, action: #selector(buttonAction))
     }()
     
-    private lazy var number0: UIButton = {
-        let button = UIButton()
-        button.translatesAutoresizingMaskIntoConstraints = false
+    private lazy var number0: CustomNumberButton = {
+        let button = CustomNumberButton(title: "0", size: CGSize(width: 191, height: 88), target: self, action: #selector(buttonAction))
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 30, bottom: 0, right: 0)
-        button.backgroundColor = #colorLiteral(red: 0.1999998987, green: 0.1999999881, blue: 0.1999999881, alpha: 1)
-        button.setTitle("0", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(32), weight: .semibold)
-        button.layer.cornerRadius = (buttonHeight) / 2
         button.contentHorizontalAlignment = .left
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
         return button
     }()
     
@@ -274,9 +273,6 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        self.displayText.inputView = UIView()
-        self.displayText.inputAccessoryView = UIView()
         
         let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(self.respondToSwipeGesture))
         swipeRight.direction = UISwipeGestureRecognizer.Direction.right
@@ -309,7 +305,7 @@ class ViewController: UIViewController {
         display.addSubview(displayText)
         
         let constraintDisplayText1 = NSLayoutConstraint(item: displayText, attribute: .right, relatedBy: .equal, toItem: display, attribute: .right, multiplier: 1.0, constant: -55)
-        let constraintDisplayText2 = NSLayoutConstraint(item: displayText, attribute: .bottom, relatedBy: .equal, toItem: display, attribute: .bottom, multiplier: 1.0, constant: 0)
+        let constraintDisplayText2 = NSLayoutConstraint(item: displayText, attribute: .bottom, relatedBy: .equal, toItem: display, attribute: .bottom, multiplier: 1.0, constant: 120)
         
         let constraintC1 = NSLayoutConstraint(item: c, attribute: .top, relatedBy: .equal, toItem: display, attribute: .bottom, multiplier: 1.0, constant: 10)
         let constraintC2 = NSLayoutConstraint(item: c, attribute: .leading, relatedBy: .equal, toItem: view, attribute: .leading, multiplier: 1.0, constant: 16)
@@ -370,8 +366,8 @@ class ViewController: UIViewController {
         
         NSLayoutConstraint.activate([constraintC1, constraintC2, constraintNegetiveNumber1, constraintNegetiveNumber2, contraintPercentSign1, contraintPercentSign2, contraintDivide1, contraintDivide2, contraintNumber7_1, contraintNumber7_2, contraintNumber8_1, contraintNumber8_2, contraintNumber9_1, contraintNumber9_2, contraintTimes1, contraintTimes2, contraintNumber4_1, contraintNumber4_2, contraintNumber5_1, contraintNumber5_2, contraintNumber6_1, contraintNumber6_2, contraintMinus1, contraintMinus2, contraintNumber1_1, contraintNumber1_2, contraintNumber2_1, contraintNumber2_2, contraintNumber3_1, contraintNumber3_2, contraintPlus1, contraintPlus2, contraintNumber0_1, contraintNumber0_2, contraintDot1, contraintDot2, contraintEqual1, contraintEqual2, constraintDisplayText1, constraintDisplayText2])
         
-        number0.widthAnchor.constraint(equalToConstant: buttonHeight * 2 + 15).isActive = true
-        number0.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
+        displayText.widthAnchor.constraint(equalToConstant: display.frame.width).isActive = true
+        displayText.heightAnchor.constraint(equalToConstant: display.frame.height).isActive = true
     }
     
     private func numberButtonAction(_ number: Int) {
@@ -435,8 +431,8 @@ class ViewController: UIViewController {
         
         if (isClicked) {
             c.setTitle("C", for: .normal)
-            displayText.text = String(removeSeparator(displayNumber: displayText.text!) / 100)
-        }
+            let a = Double(removeSeparator(displayNumber: displayText.text!))
+            displayText.text =  String(a / 100)}
         print("%")
         checkDisplayBeFormatted()
     }
