@@ -5,115 +5,109 @@
 //  Created by sepehr hajimohammadi on 10/4/23.
 //
 
+
 import UIKit
 import AudioToolbox
 
-class CustomGrayButton: UIButton {
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        super.touchesBegan(touches, with: event)
-       highlightButton()
-    }
-
-    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        super.touchesEnded(touches, with: event)
-        unhighlightButton()
+class CustomButton: UIButton {
+    var buttonColor: UIColor
+    var highlightColor: UIColor
+    var fontSize: CGFloat
+    var buttonSize: CGSize
+    
+    init(title: String, target: Any?, action: Selector, buttonColor: UIColor,highlightColor: UIColor ,fontSize: CGFloat, buttonSize: CGSize = CGSize(width: 88, height: 88)) {
+        self.buttonColor = buttonColor
+        self.highlightColor = highlightColor
+        self.fontSize = fontSize
+        self.buttonSize = buttonSize
+        super.init(frame: .zero)
+        self.backgroundColor = buttonColor
+        self.translatesAutoresizingMaskIntoConstraints = false
+        self.setTitle(title, for: .normal)
+        self.titleLabel?.font = UIFont.systemFont(ofSize: fontSize, weight: .semibold)
+        self.layer.cornerRadius = 44
+        self.addTarget(target, action: action, for: .touchUpInside)
+        self.widthAnchor.constraint(equalToConstant: buttonSize.width).isActive = true
+        self.heightAnchor.constraint(equalToConstant: buttonSize.height).isActive = true
     }
     
-    private func highlightButton() {
-        UIView.animate(withDuration: 0, delay: 0, options: .allowUserInteraction, animations: {
-//            self.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
-            self.backgroundColor = #colorLiteral(red: 0.8509804606, green: 0.850980401, blue: 0.850980401, alpha: 1)
-        }, completion: nil)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
-    
-    private func unhighlightButton() {
-        UIView.animate(withDuration: 0.5, delay: 0, options: .allowUserInteraction, animations: {
-//            self.transform = .identity// CGAffineTransform(scaleX: 0.95, y: 0.95)
-            self.backgroundColor = #colorLiteral(red: 0.6470588446, green: 0.6470588446, blue: 0.6470588446, alpha: 1)
-        }, completion: nil)
-    }
-}
-
-class CustomOrangeButton: UIButton {
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        super.touchesBegan(touches, with: event)
-        highlightButton()
-    }
-
-    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        super.touchesEnded(touches, with: event)
-        unhighlightButton()
-    }
-    
-    private func highlightButton() {
-        UIView.animate(withDuration: 0, delay: 0, options: .allowUserInteraction, animations: {
-            self.backgroundColor = #colorLiteral(red: 0.9877180457, green: 0.7791343331, blue: 0.55313164, alpha: 1)
-        }, completion: nil)
-    }
-    
-    private func unhighlightButton() {
-        UIView.animate(withDuration: 0.5, delay: 0, options: .allowUserInteraction, animations: {
-            self.backgroundColor = #colorLiteral(red: 0.9992796779, green: 0.6223273277, blue: 0.06129615009, alpha: 1)
-        }, completion: nil)
-    }
-}
-
-class CustomNumberButton: UIButton {
-    
-    //        addTarget(<#T##target: Any?##Any?#>, action: <#T##Selector#>, for: .touchDown)
-//    self.addTarget(UIButton, action: <#T##Selector#>, for: .touchCancel)
-//    init() {
-//        super.init(frame: .zero)
-//        
-//        addTarget(self, action: <#T##Selector#>, for: <#T##UIControl.Event#>)
-//    }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesBegan(touches, with: event)
         highlightButton()
     }
-
+    
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesEnded(touches, with: event)
         unhighlightButton()
     }
     
-    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        super.touchesMoved(touches, with: event)
-        if let point: CGPoint = touches.first?.location(in: self) {
-            if ((point.x < 0 || point.x > bounds.width) || (point.y < 0 || point.y > bounds.height)) {
-                unhighlightButton()
-            } else {
-                highlightButton()
-            }
-        }
-    }
-
     private func highlightButton() {
         UIView.animate(withDuration: 0, delay: 0, options: .allowUserInteraction, animations: {
-            self.backgroundColor = #colorLiteral(red: 0.4509803653, green: 0.4509803057, blue: 0.4509803057, alpha: 1)
+            self.backgroundColor = self.highlightColor
         }, completion: nil)
     }
-
+    
     private func unhighlightButton() {
         UIView.animate(withDuration: 0.5, delay: 0, options: .allowUserInteraction, animations: {
-            self.backgroundColor = #colorLiteral(red: 0.1999998987, green: 0.1999999881, blue: 0.1999999881, alpha: 1)
+            self.backgroundColor = self.buttonColor
         }, completion: nil)
+    }
+    
+    func highlightedColor() -> UIColor {
+
+        return buttonColor
     }
 }
 
+class CustomGrayButton: CustomButton {
+     let grayButtonColor = #colorLiteral(red: 0.6470588446, green: 0.6470588446, blue: 0.6470588446, alpha: 1)
+     let animationGrayColor = #colorLiteral(red: 0.8509804606, green: 0.850980401, blue: 0.850980401, alpha: 1)
+    
+    init(title: String, target: Any?, action: Selector) {
+        super.init(title: title, target: target, action: action, buttonColor: grayButtonColor,highlightColor: animationGrayColor ,fontSize: 32)
+        self.setTitleColor(.black, for: .normal)
+        self.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(32), weight: .regular)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
 
+class CustomOrangeButton: CustomButton {
+     let orangeButtonsColor = #colorLiteral(red: 0.9992719293, green: 0.6223490238, blue: 0.04383140057, alpha: 1)
+     let animationOrangeColor = #colorLiteral(red: 0.9877180457, green: 0.7791343331, blue: 0.55313164, alpha: 1)
+    
+    init(title: String, target: Any?, action: Selector) {
+        super.init(title: title, target: target, action: action, buttonColor: orangeButtonsColor,highlightColor: animationOrangeColor ,fontSize: 42)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+class CustomNumberButton: CustomButton {
+     let numberButtonColor = #colorLiteral(red: 0.1999998987, green: 0.1999999881, blue: 0.1999999881, alpha: 1)
+     let animationNumberColor = #colorLiteral(red: 0.4509803653, green: 0.4509803057, blue: 0.4509803057, alpha: 1)
+    
+    init(title: String, size : CGSize = CGSize(width: 88, height: 88), target: Any?, action: Selector) {
+        super.init(title: title, target: target, action: action, buttonColor: numberButtonColor,highlightColor: animationNumberColor ,fontSize: 32, buttonSize: size)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
 
 class ViewController: UIViewController {
-    
     let display = UIView(frame: CGRect(x: 70, y: 0, width: 380, height: 350))
     lazy var buttonHeight = (view.bounds.height - 580) / 4
-    let buttonBackgroundColor = #colorLiteral(red: 0.1999998987, green: 0.1999999881, blue: 0.1999999881, alpha: 1)
-    let orangeButtonsColor = #colorLiteral(red: 0.9992719293, green: 0.6223490238, blue: 0.04383140057, alpha: 1)
-    let grayButtonsColor = #colorLiteral(red: 0.6470588446, green: 0.6470588446, blue: 0.6470588446, alpha: 1)
-    var marksFontSize = 42
     var isClicked = false
-    var fontSize = 32
     var separatorCount = 0
     
     private func hasDisplaySpace() -> Bool {
@@ -156,7 +150,7 @@ class ViewController: UIViewController {
             separatorCount = (displayText.text?.filter { $0 == "," }.count)!
         }
     }
-   private func playTouchSound() {
+    private func playTouchSound() {
         AudioServicesPlaySystemSound(1104)
     }
     
@@ -166,229 +160,89 @@ class ViewController: UIViewController {
         text.translatesAutoresizingMaskIntoConstraints = false
         text.text = "0"
         text.textAlignment = .right
-        text.adjustsFontSizeToFitWidth = true
         text.tintColor = UIColor.clear
         text.font = UIFont.systemFont(ofSize: CGFloat(90), weight: .thin)
+        text.adjustsFontSizeToFitWidth = true
         return text
     }()
     
     private lazy var c: CustomGrayButton = {
-        let button = CustomGrayButton()
-        button.backgroundColor = grayButtonsColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("AC", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.fontSize), weight: .regular)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.setTitleColor(.black, for: .normal)
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        return button
+        return CustomGrayButton(title: "AC", target: self, action: #selector(buttonAction))
     }()
     
     private lazy var negetiveNumber: CustomGrayButton = {
-        let button = CustomGrayButton()
-        button.backgroundColor = grayButtonsColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("+/-", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.fontSize), weight: .regular)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.setTitleColor(.black, for: .normal)
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        return button
+        return CustomGrayButton(title: "+/-", target: self, action: #selector(buttonAction))
     }()
     
     private lazy var percentSign: CustomGrayButton = {
-        let button = CustomGrayButton()
-        button.backgroundColor = grayButtonsColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("%", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.fontSize), weight: .semibold)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.setTitleColor(.black, for: .normal)
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        return button
+        return CustomGrayButton(title: "%", target: self, action: #selector(buttonAction))
     }()
     
     private lazy var divide: CustomOrangeButton = {
-        let button = CustomOrangeButton()
-        button.backgroundColor = orangeButtonsColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("÷", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.marksFontSize), weight: .semibold)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        return button
+        return CustomOrangeButton(title: "÷", target: self, action: #selector(buttonAction))
     }()
     
     private lazy var times: CustomOrangeButton = {
-        let button = CustomOrangeButton()
-        button.backgroundColor = orangeButtonsColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("×", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.marksFontSize), weight: .semibold)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        return button
+        return CustomOrangeButton(title: "×", target: self, action: #selector(buttonAction))
     }()
     
     private lazy var minus: CustomOrangeButton = {
-        let button = CustomOrangeButton()
-        button.backgroundColor = orangeButtonsColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("–", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.marksFontSize), weight: .semibold)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        return button
+        return CustomOrangeButton(title: "–", target: self, action: #selector(buttonAction))
     }()
     
     private lazy var plus: CustomOrangeButton = {
-        let button = CustomOrangeButton()
-        button.backgroundColor = orangeButtonsColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("+", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.marksFontSize), weight: .semibold)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        return button
-    }()
-    
-    private lazy var equal: CustomOrangeButton = {
-        let button = CustomOrangeButton()
-        button.backgroundColor = orangeButtonsColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("=", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.marksFontSize), weight: .semibold)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        return button
-    }()
-    
-    private lazy var number7: CustomNumberButton = {
-        let button = CustomNumberButton()
-        button.backgroundColor = buttonBackgroundColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("7", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.fontSize), weight: .semibold)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        return button
-    }()
-    
-    private lazy var number8: CustomNumberButton = {
-        let button = CustomNumberButton()
-        button.backgroundColor = buttonBackgroundColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("8", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.fontSize), weight: .semibold)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        return button
-    }()
-    
-    private lazy var number9: CustomNumberButton = {
-        let button = CustomNumberButton()
-        button.backgroundColor = buttonBackgroundColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("9", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.fontSize), weight: .semibold)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        return button
-    }()
-    
-   
-    
-    private lazy var number4: CustomNumberButton = {
-        let button = CustomNumberButton()
-        button.backgroundColor = buttonBackgroundColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("4", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.fontSize), weight: .semibold)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        return button
-    }()
-    
-    private lazy var number5: CustomNumberButton = {
-        let button = CustomNumberButton()
-        button.backgroundColor = buttonBackgroundColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("5", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.fontSize), weight: .semibold)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        return button
-    }()
-    
-    private lazy var number6: CustomNumberButton = {
-        let button = CustomNumberButton()
-        button.backgroundColor = buttonBackgroundColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("6", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.fontSize), weight: .semibold)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        return button
-    }()
-    
-    
-    
-    private lazy var number1: CustomNumberButton = {
-        let button = CustomNumberButton()
-        button.backgroundColor = buttonBackgroundColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("1", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.fontSize), weight: .semibold)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        return button
-    }()
-    
-    private lazy var number2: CustomNumberButton = {
-        let button = CustomNumberButton()
-        button.backgroundColor = buttonBackgroundColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("2", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.fontSize), weight: .semibold)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        return button
-    }()
-    
-    private lazy var number3: CustomNumberButton = {
-        let button = CustomNumberButton()
-        button.backgroundColor = buttonBackgroundColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("3", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.fontSize), weight: .semibold)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        return button
-    }()
-    
-  
-    
-    private lazy var number0: CustomNumberButton = {
-        let button = CustomNumberButton()
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 30, bottom: 0, right: 0)
-        button.backgroundColor = buttonBackgroundColor
-        button.setTitle("0", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.fontSize), weight: .semibold)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.contentHorizontalAlignment = .left
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        return button
+        return CustomOrangeButton(title: "+", target: self, action: #selector(buttonAction))
     }()
     
     private lazy var dot: CustomNumberButton = {
-        let button = CustomNumberButton()
-        button.backgroundColor = buttonBackgroundColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle(".", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(self.fontSize), weight: .semibold)
-        button.layer.cornerRadius = (buttonHeight) / 2
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
+        return CustomNumberButton(title: ".", target: self, action: #selector(buttonAction))
+    }()
+    
+    private lazy var equal: CustomOrangeButton = {
+        return CustomOrangeButton(title: "=", target: self, action: #selector(buttonAction))
+    }()
+    
+    
+    private lazy var number1: CustomNumberButton = {
+        return CustomNumberButton(title: "1", target: self, action: #selector(buttonAction))
+    }()
+    
+    private lazy var number2: CustomNumberButton = {
+        return CustomNumberButton(title: "2", target: self, action: #selector(buttonAction))
+    }()
+    
+    private lazy var number3: CustomNumberButton = {
+        return CustomNumberButton(title: "3", target: self, action: #selector(buttonAction))
+    }()
+    
+    private lazy var number4: CustomNumberButton = {
+        return CustomNumberButton(title: "4", target: self, action: #selector(buttonAction))
+    }()
+    
+    private lazy var number5: CustomNumberButton = {
+        return CustomNumberButton(title: "5", target: self, action: #selector(buttonAction))
+    }()
+    
+    private lazy var number6: CustomNumberButton = {
+        return CustomNumberButton(title: "6", target: self, action: #selector(buttonAction))
+    }()
+    
+    private lazy var number7: CustomNumberButton = {
+        return CustomNumberButton(title: "7", target: self, action: #selector(buttonAction))
+    }()
+    
+    private lazy var number8: CustomNumberButton = {
+        return CustomNumberButton(title: "8", target: self, action: #selector(buttonAction))
+    }()
+    
+    private lazy var number9: CustomNumberButton = {
+        return CustomNumberButton(title: "9", target: self, action: #selector(buttonAction))
+    }()
+    
+    private lazy var number0: CustomNumberButton = {
+        let button = CustomNumberButton(title: "0", size: CGSize(width: 191, height: 88), target: self, action: #selector(buttonAction))
+        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 30, bottom: 0, right: 0)
+        button.contentHorizontalAlignment = .left
         return button
     }()
     
@@ -419,10 +273,6 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        self.displayText.inputView = UIView()
-        self.displayText.inputAccessoryView = UIView()
-        
         
         let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(self.respondToSwipeGesture))
         swipeRight.direction = UISwipeGestureRecognizer.Direction.right
@@ -516,63 +366,6 @@ class ViewController: UIViewController {
         
         NSLayoutConstraint.activate([constraintC1, constraintC2, constraintNegetiveNumber1, constraintNegetiveNumber2, contraintPercentSign1, contraintPercentSign2, contraintDivide1, contraintDivide2, contraintNumber7_1, contraintNumber7_2, contraintNumber8_1, contraintNumber8_2, contraintNumber9_1, contraintNumber9_2, contraintTimes1, contraintTimes2, contraintNumber4_1, contraintNumber4_2, contraintNumber5_1, contraintNumber5_2, contraintNumber6_1, contraintNumber6_2, contraintMinus1, contraintMinus2, contraintNumber1_1, contraintNumber1_2, contraintNumber2_1, contraintNumber2_2, contraintNumber3_1, contraintNumber3_2, contraintPlus1, contraintPlus2, contraintNumber0_1, contraintNumber0_2, contraintDot1, contraintDot2, contraintEqual1, contraintEqual2, constraintDisplayText1, constraintDisplayText2])
         
-        c.widthAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        c.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
-        negetiveNumber.widthAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        negetiveNumber.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
-        percentSign.widthAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        percentSign.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
-        divide.widthAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        divide.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
-        number7.widthAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        number7.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
-        number8.widthAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        number8.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
-        number9.widthAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        number9.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
-        times.widthAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        times.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
-        number4.widthAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        number4.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
-        number5.widthAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        number5.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
-        number6.widthAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        number6.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
-        minus.widthAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        minus.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
-        number1.widthAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        number1.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
-        number2.widthAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        number2.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
-        number3.widthAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        number3.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
-        plus.widthAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        plus.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
-        number0.widthAnchor.constraint(equalToConstant: buttonHeight * 2 + 15).isActive = true
-        number0.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
-        dot.widthAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        dot.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
-        equal.widthAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        equal.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
-        
         displayText.widthAnchor.constraint(equalToConstant: display.frame.width).isActive = true
         displayText.heightAnchor.constraint(equalToConstant: display.frame.height).isActive = true
     }
@@ -638,8 +431,8 @@ class ViewController: UIViewController {
         
         if (isClicked) {
             c.setTitle("C", for: .normal)
-            displayText.text = String(removeSeparator(displayNumber: displayText.text!) / 100)
-        }
+            let a = Double(removeSeparator(displayNumber: displayText.text!))
+            displayText.text =  String(a / 100)}
         print("%")
         checkDisplayBeFormatted()
     }
