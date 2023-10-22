@@ -4,7 +4,26 @@
 //
 //  Created by sepehr hajimohammadi on 10/4/23.
 //
+// UIButton                             ✅           ❌
+// UIColor                              ✅           ❌
+// CGFloat                              ✅           ❌
+// CGSize                               ✅           ❌
+// CGRect                               ✅           ❌
+// UITouch
+// UIEvent
+// UIView
+// UIFont
+// UIViewController
+// UITextField
+// UIGestureRecognizer
+// UISwipeGestureRecognizer
+// NSLayoutConstraint
+// UIEdgeInsets
 
+// NumberFormatter
+// fatalError
+// Selector
+// NSCoder
 
 import UIKit
 import AudioToolbox
