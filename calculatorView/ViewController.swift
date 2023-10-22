@@ -3,8 +3,27 @@
 //  calculatorView
 //
 //  Created by sepehr hajimohammadi on 10/4/23.
-//
+//                                    allFunc     insideFunc
+// UIButton                             ✅           ❌
+// UIColor                              ✅           ❌
+// CGFloat                              ✅           ❌
+// CGSize                               ✅           ❌
+// CGRect                               ✅           ❌
+// UITouch
+// UIEvent
+// UIView
+// UIFont
+// UIViewController
+// UITextField
+// UIGestureRecognizer
+// UISwipeGestureRecognizer
+// NSLayoutConstraint
+// UIEdgeInsets
 
+// NumberFormatter
+// fatalError
+// Selector
+// NSCoder
 
 import UIKit
 import AudioToolbox
@@ -29,6 +48,8 @@ class CustomButton: UIButton {
         self.addTarget(target, action: action, for: .touchUpInside)
         self.widthAnchor.constraint(equalToConstant: buttonSize.width).isActive = true
         self.heightAnchor.constraint(equalToConstant: buttonSize.height).isActive = true
+        
+        setupGestureRecognizers()
     }
     
     required init?(coder: NSCoder) {
@@ -58,10 +79,51 @@ class CustomButton: UIButton {
     }
     
     func highlightedColor() -> UIColor {
-
+        
         return buttonColor
     }
+    
+    
+    
+    
+    private func setupGestureRecognizers() {
+        let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+        self.addGestureRecognizer(panGestureRecognizer)
+    }
+    
+    @objc private func handlePan(_ sender: UIPanGestureRecognizer) {
+        let touchLocation = sender.location(in: self)
+
+        if self.point(inside: touchLocation, with: nil) {
+            // If the finger is inside the button while panning, highlight it
+            if !isHighlighted {
+                highlightButton()
+                isHighlighted = true
+            }
+        } else {
+            // If the finger is outside the button while panning, unhighlight it
+            if isHighlighted {
+                unhighlightButton()
+                isHighlighted = false
+            }
+        }
+        
+        // Detect if the finger swipes into another button
+        if let superview = self.superview {
+            for subview in superview.subviews {
+                if let otherButton = subview as? CustomButton, otherButton != self {
+                    let touchLocationInOtherButton = sender.location(in: otherButton)
+                    if otherButton.point(inside: touchLocationInOtherButton, with: nil) {
+                        otherButton.highlightButton()
+                    } else {
+                        otherButton.unhighlightButton()
+                    }
+                }
+            }
+        }
+    }
 }
+
 
 class CustomGrayButton: CustomButton {
      let grayButtonColor = #colorLiteral(red: 0.6470588446, green: 0.6470588446, blue: 0.6470588446, alpha: 1)
@@ -131,8 +193,8 @@ class ViewController: UIViewController {
     
     private func removeSeparator(displayNumber: String) -> Double {
         let displayTextWithoutSeparator = displayText.text?.replacingOccurrences(of: ",", with: "")
-        let displayNumberToDouble = Double(displayTextWithoutSeparator!)
-        return displayNumberToDouble!
+        let displayNumberToDouble = Double(displayTextWithoutSeparator ?? "")
+        return displayNumberToDouble ?? 0
     }
     
     func formatNumber(_ number: Double) -> String {
@@ -143,9 +205,9 @@ class ViewController: UIViewController {
     
     private func checkDisplayBeFormatted() {
         if let text = displayText.text, !text.contains(".") && text != "-0" {
-            let filteredValue = displayText.text!.replacingOccurrences(of: ",", with: "")
-            let valueToDouble = Double(filteredValue)
-            let valueWithFormat = formatNumber(valueToDouble!)
+            let filteredValue = displayText.text?.replacingOccurrences(of: ",", with: "")
+            let valueToDouble = Double(filteredValue ?? "")
+            let valueWithFormat = formatNumber(valueToDouble ?? 0)
             displayText.text = valueWithFormat
             separatorCount = (displayText.text?.filter { $0 == "," }.count)!
         }
@@ -380,7 +442,7 @@ class ViewController: UIViewController {
         }
         c.setTitle("C", for: .normal)
         if (hasDisplaySpace()) {
-            displayText.text! += String(number)
+            displayText.text? += String(number)
         }
         print(number)
         checkDisplayBeFormatted()
@@ -390,7 +452,7 @@ class ViewController: UIViewController {
         playTouchSound()
         isClicked = false
         c.setTitle("AC", for: .normal)
-        displayText.text! = "0"
+        displayText.text = "0"
         print("C")
     }
     
@@ -399,7 +461,7 @@ class ViewController: UIViewController {
         if (displayText.text != "0" && displayText.text != "-0") {
             isClicked = true
             if (hasDisplaySpace()) {
-                displayText.text! += "0"
+                displayText.text? += "0"
             }
         }
         if (displayText.text == "-0") {
@@ -414,7 +476,7 @@ class ViewController: UIViewController {
         
         if (displayText.text?.contains("-") == false) {
             
-            let a = "-" + displayText.text!
+            let a = "-" + (displayText.text ?? "")
             displayText.text = a
         } else {
             displayText.text?.removeFirst()
@@ -431,7 +493,7 @@ class ViewController: UIViewController {
         
         if (isClicked) {
             c.setTitle("C", for: .normal)
-            let a = Double(removeSeparator(displayNumber: displayText.text!))
+            let a = Double(removeSeparator(displayNumber: displayText.text ?? ""))
             displayText.text =  String(a / 100)}
         print("%")
         checkDisplayBeFormatted()
@@ -440,9 +502,9 @@ class ViewController: UIViewController {
     private func dotButtonAction() {
         playTouchSound()
         isClicked = true
-        if (displayText.text?.contains(".") == false && displayText.text!.count < 11) {
+        if (displayText.text?.contains(".") == false && displayText.text?.count ?? 100 < 11) {
             c.setTitle("C", for: .normal)
-            displayText.text! += "."
+            displayText.text? += "."
         }
         print(".")
         checkDisplayBeFormatted()
