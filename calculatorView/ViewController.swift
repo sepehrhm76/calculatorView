@@ -79,12 +79,8 @@ class CustomButton: UIButton {
     }
     
     func highlightedColor() -> UIColor {
-        
         return buttonColor
     }
-    
-    
-    
     
     private func setupGestureRecognizers() {
         let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
@@ -93,7 +89,8 @@ class CustomButton: UIButton {
     
     @objc private func handlePan(_ sender: UIPanGestureRecognizer) {
         let touchLocation = sender.location(in: self)
-
+        var lastButton: CustomButton? // To keep track of the last button entered
+        
         if self.point(inside: touchLocation, with: nil) {
             // If the finger is inside the button while panning, highlight it
             if !isHighlighted {
@@ -115,10 +112,19 @@ class CustomButton: UIButton {
                     let touchLocationInOtherButton = sender.location(in: otherButton)
                     if otherButton.point(inside: touchLocationInOtherButton, with: nil) {
                         otherButton.highlightButton()
+                        lastButton = otherButton // Update the last button
                     } else {
                         otherButton.unhighlightButton()
                     }
                 }
+            }
+        }
+        
+        // If the gesture state ends, perform the action on the last button
+        if sender.state == .ended {
+            lastButton?.unhighlightButton()
+            if isHighlighted {
+                lastButton?.sendActions(for: .touchUpInside)
             }
         }
     }
