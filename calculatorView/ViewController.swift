@@ -147,8 +147,8 @@ class CustomGrayButton: CustomButton {
 }
 
 class CustomOrangeButton: CustomButton {
-     let orangeButtonsColor = #colorLiteral(red: 0.9992719293, green: 0.6223490238, blue: 0.04383140057, alpha: 1)
-     let animationOrangeColor = #colorLiteral(red: 0.9877180457, green: 0.7791343331, blue: 0.55313164, alpha: 1)
+     var orangeButtonsColor = #colorLiteral(red: 0.9992719293, green: 0.6223490238, blue: 0.04383140057, alpha: 1)
+     var animationOrangeColor = #colorLiteral(red: 0.9877180457, green: 0.7791343331, blue: 0.55313164, alpha: 1)
     
     init(title: String, target: Any?, action: Selector) {
         super.init(title: title, target: target, action: action, buttonColor: orangeButtonsColor,highlightColor: animationOrangeColor ,fontSize: 42)
@@ -177,6 +177,21 @@ class ViewController: UIViewController {
     lazy var buttonHeight = (view.bounds.height - 580) / 4
     var isClicked = false
     var separatorCount = 0
+    var isPlusActive = false
+    var isMinusActive = false
+    var isTimesActive = false
+    var isDivideActive = false
+    var inputAfterOpration = false
+    var isItResult = false
+    var a : Double = 0
+    var b : Double = 0
+    var result : Double = 0
+    
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+       get {
+          return .portrait
+       }
+    }
     
     private func hasDisplaySpace() -> Bool {
         if let text = displayText.text {
@@ -269,8 +284,7 @@ class ViewController: UIViewController {
     private lazy var equal: CustomOrangeButton = {
         return CustomOrangeButton(title: "=", target: self, action: #selector(buttonAction))
     }()
-    
-    
+
     private lazy var number1: CustomNumberButton = {
         return CustomNumberButton(title: "1", target: self, action: #selector(buttonAction))
     }()
@@ -318,21 +332,22 @@ class ViewController: UIViewController {
         if let swipeGesture = gesture as? UISwipeGestureRecognizer {
             switch swipeGesture.direction {
             case .right, .left:
-                if let text = displayText.text, !text.isEmpty, text != "-0" {
-                    displayText.text?.removeLast()
-                } else {
-                    displayText.text = "0"
+                if (!isItResult) {
+                    if let text = displayText.text, !text.isEmpty, text != "-0" {
+                        displayText.text?.removeLast()
+                    } else {
+                        displayText.text = "0"
+                    }
+                    
+                    if displayText.text?.isEmpty == true {
+                        displayText.text = "0"
+                    }
+                    
+                    if displayText.text?.count == 1, displayText.text?.contains("-") == true {
+                        displayText.text = "-0"
+                    }
+                    checkDisplayBeFormatted()
                 }
-                
-                if displayText.text?.isEmpty == true {
-                    displayText.text = "0"
-                }
-                
-                if displayText.text?.count == 1, displayText.text?.contains("-") == true {
-                    displayText.text = "-0"
-                }
-                checkDisplayBeFormatted()
-                
             default:
                 break
             }
@@ -441,25 +456,32 @@ class ViewController: UIViewController {
     private func numberButtonAction(_ number: Int) {
         playTouchSound()
         isClicked = true
-        if (displayText.text == "0") {
+        
+        if (displayText.text == "0" || inputAfterOpration) {
             displayText.text = ""
+            inputAfterOpration = false
+
         } else if (displayText.text == "-0") {
             displayText.text = "-"
         }
+        
         c.setTitle("C", for: .normal)
         if (hasDisplaySpace()) {
             displayText.text? += String(number)
         }
-        print(number)
         checkDisplayBeFormatted()
     }
     
     private func cButtonAction() {
         playTouchSound()
+        isPlusActive = false
+        isMinusActive = false
+        isTimesActive = false
+        isDivideActive = false
+        isItResult = false
         isClicked = false
         c.setTitle("AC", for: .normal)
         displayText.text = "0"
-        print("C")
     }
     
     private func number0ButtonAction() {
@@ -473,7 +495,6 @@ class ViewController: UIViewController {
         if (displayText.text == "-0") {
             c.setTitle("C", for: .normal)
         }
-        print("0")
         checkDisplayBeFormatted()
     }
     
@@ -488,7 +509,6 @@ class ViewController: UIViewController {
             displayText.text?.removeFirst()
         }
         
-        print("+/-")
     }
     
     private func percentSignButtonAction() {
@@ -512,28 +532,93 @@ class ViewController: UIViewController {
             c.setTitle("C", for: .normal)
             displayText.text? += "."
         }
-        print(".")
         checkDisplayBeFormatted()
     }
     
     private func equalButtonAction() {
         playTouchSound()
+        if (isPlusActive) {
+            if (!isItResult) {
+                b = removeSeparator(displayNumber: displayText.text ?? "")
+                result = a + b
+                isItResult = true
+                displayText.text = String(result)
+            } else {
+                result += b
+                displayText.text = String(result)
+            }
+        }else if (isMinusActive) {
+            if (!isItResult) {
+                b = removeSeparator(displayNumber: displayText.text ?? "")
+                result = a - b
+                isItResult = true
+                displayText.text = String(result)
+            } else {
+                result -= b
+                displayText.text = String(result)
+            }
+        } else if (isTimesActive) {
+            if (!isItResult) {
+                b = removeSeparator(displayNumber: displayText.text ?? "")
+                result = a * b
+                isItResult = true
+                displayText.text = String(result)
+            } else {
+                result *= b
+                displayText.text = String(result)
+            }
+        } else if (isDivideActive) {
+            if (!isItResult) {
+                b = removeSeparator(displayNumber: displayText.text ?? "")
+                result = a / b
+                isItResult = true
+                displayText.text = String(result)
+            } else {
+                result /= b
+                displayText.text = String(result)
+            }
+        }
     }
     
     private func plusButtonAction() {
         playTouchSound()
+        inputAfterOpration = true
+        isPlusActive = true
+        isMinusActive = false
+        isTimesActive = false
+        isDivideActive = false
+        a = removeSeparator(displayNumber: displayText.text ?? "")
+        print(a)
     }
     
     private func minusButtonAction() {
         playTouchSound()
+        inputAfterOpration = true
+        isPlusActive = false
+        isMinusActive = true
+        isTimesActive = false
+        isDivideActive = false
+        a = removeSeparator(displayNumber: displayText.text ?? "")
     }
     
     private func timesButtonAction() {
         playTouchSound()
+        inputAfterOpration = true
+        isPlusActive = false
+        isMinusActive = false
+        isTimesActive = true
+        isDivideActive = false
+        a = removeSeparator(displayNumber: displayText.text ?? "")
     }
     
     private func divideButtonAction() {
         playTouchSound()
+        inputAfterOpration = true
+        isPlusActive = false
+        isMinusActive = false
+        isTimesActive = false
+        isDivideActive = true
+        a = removeSeparator(displayNumber: displayText.text ?? "")
     }
     
     @objc private func buttonAction(_ sender: UIButton) {
