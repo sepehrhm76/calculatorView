@@ -132,8 +132,8 @@ class CustomButton: UIButton {
 
 
 class CustomGrayButton: CustomButton {
-     let grayButtonColor = #colorLiteral(red: 0.6470588446, green: 0.6470588446, blue: 0.6470588446, alpha: 1)
-     let animationGrayColor = #colorLiteral(red: 0.8509804606, green: 0.850980401, blue: 0.850980401, alpha: 1)
+    let grayButtonColor = #colorLiteral(red: 0.6470588446, green: 0.6470588446, blue: 0.6470588446, alpha: 1)
+    let animationGrayColor = #colorLiteral(red: 0.8509804606, green: 0.850980401, blue: 0.850980401, alpha: 1)
     
     init(title: String, target: Any?, action: Selector) {
         super.init(title: title, target: target, action: action, buttonColor: grayButtonColor,highlightColor: animationGrayColor ,fontSize: 32)
@@ -147,8 +147,8 @@ class CustomGrayButton: CustomButton {
 }
 
 class CustomOrangeButton: CustomButton {
-     var orangeButtonsColor = #colorLiteral(red: 0.9992719293, green: 0.6223490238, blue: 0.04383140057, alpha: 1)
-     var animationOrangeColor = #colorLiteral(red: 0.9877180457, green: 0.7791343331, blue: 0.55313164, alpha: 1)
+    var orangeButtonsColor = #colorLiteral(red: 0.9992719293, green: 0.6223490238, blue: 0.04383140057, alpha: 1)
+    var animationOrangeColor = #colorLiteral(red: 0.9877180457, green: 0.7791343331, blue: 0.55313164, alpha: 1)
     
     init(title: String, target: Any?, action: Selector) {
         super.init(title: title, target: target, action: action, buttonColor: orangeButtonsColor,highlightColor: animationOrangeColor ,fontSize: 42)
@@ -160,8 +160,8 @@ class CustomOrangeButton: CustomButton {
 }
 
 class CustomNumberButton: CustomButton {
-     let numberButtonColor = #colorLiteral(red: 0.1999998987, green: 0.1999999881, blue: 0.1999999881, alpha: 1)
-     let animationNumberColor = #colorLiteral(red: 0.4509803653, green: 0.4509803057, blue: 0.4509803057, alpha: 1)
+    let numberButtonColor = #colorLiteral(red: 0.1999998987, green: 0.1999999881, blue: 0.1999999881, alpha: 1)
+    let animationNumberColor = #colorLiteral(red: 0.4509803653, green: 0.4509803057, blue: 0.4509803057, alpha: 1)
     
     init(title: String, size : CGSize = CGSize(width: 88, height: 88), target: Any?, action: Selector) {
         super.init(title: title, target: target, action: action, buttonColor: numberButtonColor,highlightColor: animationNumberColor ,fontSize: 32, buttonSize: size)
@@ -188,9 +188,9 @@ class ViewController: UIViewController {
     var result : Double = 0
     
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-       get {
-          return .portrait
-       }
+        get {
+            return .portrait
+        }
     }
     
     private func hasDisplaySpace() -> Bool {
@@ -284,7 +284,7 @@ class ViewController: UIViewController {
     private lazy var equal: CustomOrangeButton = {
         return CustomOrangeButton(title: "=", target: self, action: #selector(buttonAction))
     }()
-
+    
     private lazy var number1: CustomNumberButton = {
         return CustomNumberButton(title: "1", target: self, action: #selector(buttonAction))
     }()
@@ -457,17 +457,30 @@ class ViewController: UIViewController {
         playTouchSound()
         isClicked = true
         
-        if (displayText.text == "0" || inputAfterOpration) {
-            displayText.text = ""
-            inputAfterOpration = false
-
-        } else if (displayText.text == "-0") {
-            displayText.text = "-"
-        }
-        
-        c.setTitle("C", for: .normal)
-        if (hasDisplaySpace()) {
-            displayText.text? += String(number)
+        if (number == 0) {
+            if (displayText.text != "0" && displayText.text != "-0") {
+                isClicked = true
+                if (hasDisplaySpace()) {
+                    displayText.text? += "0"
+                }
+            }
+            if (displayText.text == "-0") {
+                c.setTitle("C", for: .normal)
+            }
+        } else {
+            
+            if (displayText.text == "0" || inputAfterOpration) {
+                displayText.text = ""
+                inputAfterOpration = false
+                
+            } else if (displayText.text == "-0") {
+                displayText.text = "-"
+            }
+            
+            c.setTitle("C", for: .normal)
+            if (hasDisplaySpace()) {
+                displayText.text? += String(number)
+            }
         }
         checkDisplayBeFormatted()
     }
@@ -482,20 +495,6 @@ class ViewController: UIViewController {
         isClicked = false
         c.setTitle("AC", for: .normal)
         displayText.text = "0"
-    }
-    
-    private func number0ButtonAction() {
-        playTouchSound()
-        if (displayText.text != "0" && displayText.text != "-0") {
-            isClicked = true
-            if (hasDisplaySpace()) {
-                displayText.text? += "0"
-            }
-        }
-        if (displayText.text == "-0") {
-            c.setTitle("C", for: .normal)
-        }
-        checkDisplayBeFormatted()
     }
     
     private func negetiveNumberButtonAction() {
@@ -521,7 +520,6 @@ class ViewController: UIViewController {
             c.setTitle("C", for: .normal)
             let a = Double(removeSeparator(displayNumber: displayText.text ?? ""))
             displayText.text =  String(a / 100)}
-        print("%")
         checkDisplayBeFormatted()
     }
     
@@ -537,6 +535,7 @@ class ViewController: UIViewController {
     
     private func equalButtonAction() {
         playTouchSound()
+        inputAfterOpration = true
         if (isPlusActive) {
             if (!isItResult) {
                 b = removeSeparator(displayNumber: displayText.text ?? "")
@@ -588,7 +587,6 @@ class ViewController: UIViewController {
         isTimesActive = false
         isDivideActive = false
         a = removeSeparator(displayNumber: displayText.text ?? "")
-        print(a)
     }
     
     private func minusButtonAction() {
@@ -643,7 +641,7 @@ class ViewController: UIViewController {
         case number9:
             numberButtonAction(9)
         case number0:
-            number0ButtonAction()
+            numberButtonAction(0)
         case negetiveNumber:
             negetiveNumberButtonAction()
         case percentSign:
