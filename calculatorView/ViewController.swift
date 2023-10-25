@@ -219,6 +219,20 @@ class ViewController: UIViewController {
         return displayNumberToDouble ?? 0
     }
     
+    private func subtractionArray(numbersForOppration: [Double]) -> Double {
+        guard !numbersForOppration.isEmpty else {
+            return 0
+        }
+        
+        var result = numbersForOppration[0]
+        
+        for i in 1..<numbersForOppration.count {
+            result -= numbersForOppration[i]
+        }
+        
+        return result
+    }
+    
     func formatNumber(_ number: Double) -> String {
         let numberFormatter = NumberFormatter()
         numberFormatter.numberStyle = .decimal
@@ -513,16 +527,18 @@ class ViewController: UIViewController {
     
     private func cButtonAction() {
         playTouchSound()
+        isOpperationSelected = false
         isPlusActive = false
         isMinusActive = false
         isTimesActive = false
         isDivideActive = false
         isItResult = false
+        isNumberClicked = false
         isClicked = false
         c.setTitle("AC", for: .normal)
+        displayText.text = "0"
         numbers.removeAll()
         result = 0
-        displayText.text = "0"
     }
     
     private func negetiveNumberButtonAction() {
@@ -565,6 +581,7 @@ class ViewController: UIViewController {
     private func equalButtonAction() {
         playTouchSound()
         isEqualActive = true
+        isOpperationSelected = false
         if (isPlusActive) {
             numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
             if (isNumberClicked) {
@@ -576,31 +593,37 @@ class ViewController: UIViewController {
                 isNumberClicked = false
             }
             numbers.removeAll()
-            isOpperationSelected = false
+            
             
         } else if (isMinusActive) {
+            numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
+            if (isNumberClicked) {
+                isNumberClicked = false
+                result = subtractionArray(numbersForOppration: numbers)
+                displayText.text = formatNumber(result)
+            } else {
+                displayText.text = formatNumber(result)
+                isNumberClicked = false
+            }
+            numbers.removeAll()
             
         } else if (isTimesActive) {
             
         }
-        //         else if (isDivideActive) {
-        //            if (!isItResult) {
-        //                if (b != 0) {
-        //                    result = a / b
-        //                    isItResult = true
-        //                    displayText.text = formatNumber(result)
-        //                } else {
-        //                    displayText.text = "Error"
-        //                }
-        //            } else {
-        //                result /= b
-        //                displayText.text = formatNumber(result)
-        //            }
-        //        }
     }
     
     private func plusButtonAction() {
         playTouchSound()
+        if (isMinusActive) {
+            
+            numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
+            
+            isNumberClicked = false
+            result = subtractionArray(numbersForOppration: numbers)
+            displayText.text = formatNumber(result)
+            numbers.removeAll()
+        }
+        
         if (!isOpperationSelected) {
             isOpperationSelected = true
             isPlusActive = true
@@ -617,7 +640,25 @@ class ViewController: UIViewController {
     
     private func minusButtonAction() {
         playTouchSound()
-       
+        if (isPlusActive) {
+            numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
+            result = numbers.reduce(0, +)
+            displayText.text = formatNumber(result)
+            numbers.removeAll()
+        }
+        if (!isOpperationSelected) {
+            isOpperationSelected = true
+            isPlusActive = false
+            isNumberClicked = false
+            isMinusActive = true
+            isTimesActive = false
+            isDivideActive = false
+            isEqualActive = false
+            numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
+            result = subtractionArray(numbersForOppration: numbers)
+            displayText.text = formatNumber(result)
+        }
+        
     }
     
     private func timesButtonAction() {
