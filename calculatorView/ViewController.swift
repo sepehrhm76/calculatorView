@@ -3,6 +3,7 @@
 //  calculatorView
 //
 //  Created by sepehr hajimohammadi on 10/4/23.
+//                                    allFunc     insideFunc
 //
 // UIButton                             ✅           ❌
 // UIColor                              ✅           ❌
@@ -48,6 +49,8 @@ class CustomButton: UIButton {
         self.addTarget(target, action: action, for: .touchUpInside)
         self.widthAnchor.constraint(equalToConstant: buttonSize.width).isActive = true
         self.heightAnchor.constraint(equalToConstant: buttonSize.height).isActive = true
+        
+        setupGestureRecognizers()
     }
     
     required init?(coder: NSCoder) {
@@ -77,14 +80,61 @@ class CustomButton: UIButton {
     }
     
     func highlightedColor() -> UIColor {
-
         return buttonColor
+    }
+    
+    private func setupGestureRecognizers() {
+        let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+        self.addGestureRecognizer(panGestureRecognizer)
+    }
+    
+    @objc private func handlePan(_ sender: UIPanGestureRecognizer) {
+        let touchLocation = sender.location(in: self)
+        var lastButton: CustomButton? // To keep track of the last button entered
+        
+        if self.point(inside: touchLocation, with: nil) {
+            // If the finger is inside the button while panning, highlight it
+            if !isHighlighted {
+                highlightButton()
+                isHighlighted = true
+            }
+        } else {
+            // If the finger is outside the button while panning, unhighlight it
+            if isHighlighted {
+                unhighlightButton()
+                isHighlighted = false
+            }
+        }
+        
+        // Detect if the finger swipes into another button
+        if let superview = self.superview {
+            for subview in superview.subviews {
+                if let otherButton = subview as? CustomButton, otherButton != self {
+                    let touchLocationInOtherButton = sender.location(in: otherButton)
+                    if otherButton.point(inside: touchLocationInOtherButton, with: nil) {
+                        otherButton.highlightButton()
+                        lastButton = otherButton // Update the last button
+                    } else {
+                        otherButton.unhighlightButton()
+                    }
+                }
+            }
+        }
+        
+        // If the gesture state ends, perform the action on the last button
+        if sender.state == .ended {
+            lastButton?.unhighlightButton()
+            if isHighlighted {
+                lastButton?.sendActions(for: .touchUpInside)
+            }
+        }
     }
 }
 
+
 class CustomGrayButton: CustomButton {
-     let grayButtonColor = #colorLiteral(red: 0.6470588446, green: 0.6470588446, blue: 0.6470588446, alpha: 1)
-     let animationGrayColor = #colorLiteral(red: 0.8509804606, green: 0.850980401, blue: 0.850980401, alpha: 1)
+    let grayButtonColor = #colorLiteral(red: 0.6470588446, green: 0.6470588446, blue: 0.6470588446, alpha: 1)
+    let animationGrayColor = #colorLiteral(red: 0.8509804606, green: 0.850980401, blue: 0.850980401, alpha: 1)
     
     init(title: String, target: Any?, action: Selector) {
         super.init(title: title, target: target, action: action, buttonColor: grayButtonColor,highlightColor: animationGrayColor ,fontSize: 32)
@@ -98,8 +148,8 @@ class CustomGrayButton: CustomButton {
 }
 
 class CustomOrangeButton: CustomButton {
-     let orangeButtonsColor = #colorLiteral(red: 0.9992719293, green: 0.6223490238, blue: 0.04383140057, alpha: 1)
-     let animationOrangeColor = #colorLiteral(red: 0.9877180457, green: 0.7791343331, blue: 0.55313164, alpha: 1)
+    var orangeButtonsColor = #colorLiteral(red: 0.9992719293, green: 0.6223490238, blue: 0.04383140057, alpha: 1)
+    var animationOrangeColor = #colorLiteral(red: 0.9877180457, green: 0.7791343331, blue: 0.55313164, alpha: 1)
     
     init(title: String, target: Any?, action: Selector) {
         super.init(title: title, target: target, action: action, buttonColor: orangeButtonsColor,highlightColor: animationOrangeColor ,fontSize: 42)
@@ -111,8 +161,8 @@ class CustomOrangeButton: CustomButton {
 }
 
 class CustomNumberButton: CustomButton {
-     let numberButtonColor = #colorLiteral(red: 0.1999998987, green: 0.1999999881, blue: 0.1999999881, alpha: 1)
-     let animationNumberColor = #colorLiteral(red: 0.4509803653, green: 0.4509803057, blue: 0.4509803057, alpha: 1)
+    let numberButtonColor = #colorLiteral(red: 0.1999998987, green: 0.1999999881, blue: 0.1999999881, alpha: 1)
+    let animationNumberColor = #colorLiteral(red: 0.4509803653, green: 0.4509803057, blue: 0.4509803057, alpha: 1)
     
     init(title: String, size : CGSize = CGSize(width: 88, height: 88), target: Any?, action: Selector) {
         super.init(title: title, target: target, action: action, buttonColor: numberButtonColor,highlightColor: animationNumberColor ,fontSize: 32, buttonSize: size)
@@ -127,7 +177,23 @@ class ViewController: UIViewController {
     let display = UIView(frame: CGRect(x: 70, y: 0, width: 380, height: 350))
     lazy var buttonHeight = (view.bounds.height - 580) / 4
     var isClicked = false
+    var isNumberClicked = false
+    var isPlusActive = false
+    var isMinusActive = false
+    var isTimesActive = false
+    var isDivideActive = false
+    var isEqualActive = false
+    var isItResult = false
+    var isOpperationSelected = false
     var separatorCount = 0
+    var result : Double = 0
+    var numbers: [Double] = []
+    
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        get {
+            return .portrait
+        }
+    }
     
     private func hasDisplaySpace() -> Bool {
         if let text = displayText.text {
@@ -150,21 +216,44 @@ class ViewController: UIViewController {
     
     private func removeSeparator(displayNumber: String) -> Double {
         let displayTextWithoutSeparator = displayText.text?.replacingOccurrences(of: ",", with: "")
-        let displayNumberToDouble = Double(displayTextWithoutSeparator!)
-        return displayNumberToDouble!
+        let displayNumberToDouble = Double(displayTextWithoutSeparator ?? "")
+        return displayNumberToDouble ?? 0
+    }
+    
+    private func subtractionArray(numbersForOppration: [Double]) -> Double {
+        guard !numbersForOppration.isEmpty else {
+            return 0
+        }
+        
+        var result = numbersForOppration[0]
+        
+        for i in 1..<numbersForOppration.count {
+            result -= numbersForOppration[i]
+        }
+        
+        return result
     }
     
     func formatNumber(_ number: Double) -> String {
         let numberFormatter = NumberFormatter()
         numberFormatter.numberStyle = .decimal
+        
+        if number.truncatingRemainder(dividingBy: 1) == 0 {
+            numberFormatter.minimumFractionDigits = 0
+            numberFormatter.maximumFractionDigits = 0
+        } else {
+            numberFormatter.minimumFractionDigits = 1
+            numberFormatter.maximumFractionDigits = 10
+        }
+        
         return numberFormatter.string(from: NSNumber(value: number)) ?? ""
     }
     
     private func checkDisplayBeFormatted() {
         if let text = displayText.text, !text.contains(".") && text != "-0" {
-            let filteredValue = displayText.text!.replacingOccurrences(of: ",", with: "")
-            let valueToDouble = Double(filteredValue)
-            let valueWithFormat = formatNumber(valueToDouble!)
+            let filteredValue = displayText.text?.replacingOccurrences(of: ",", with: "")
+            let valueToDouble = Double(filteredValue ?? "")
+            let valueWithFormat = formatNumber(valueToDouble ?? 0)
             displayText.text = valueWithFormat
             separatorCount = (displayText.text?.filter { $0 == "," }.count)!
         }
@@ -182,6 +271,7 @@ class ViewController: UIViewController {
         text.tintColor = UIColor.clear
         text.font = UIFont.systemFont(ofSize: CGFloat(90), weight: .thin)
         text.adjustsFontSizeToFitWidth = true
+        text.isUserInteractionEnabled = false
         return text
     }()
     
@@ -220,7 +310,6 @@ class ViewController: UIViewController {
     private lazy var equal: CustomOrangeButton = {
         return CustomOrangeButton(title: "=", target: self, action: #selector(buttonAction))
     }()
-    
     
     private lazy var number1: CustomNumberButton = {
         return CustomNumberButton(title: "1", target: self, action: #selector(buttonAction))
@@ -269,21 +358,22 @@ class ViewController: UIViewController {
         if let swipeGesture = gesture as? UISwipeGestureRecognizer {
             switch swipeGesture.direction {
             case .right, .left:
-                if let text = displayText.text, !text.isEmpty, text != "-0" {
-                    displayText.text?.removeLast()
-                } else {
-                    displayText.text = "0"
+                if (!isOpperationSelected) {
+                    if let text = displayText.text, !text.isEmpty, text != "-0" {
+                        displayText.text?.removeLast()
+                    } else {
+                        displayText.text = "0"
+                    }
+                    
+                    if displayText.text?.isEmpty == true {
+                        displayText.text = "0"
+                    }
+                    
+                    if displayText.text?.count == 1, displayText.text?.contains("-") == true {
+                        displayText.text = "-0"
+                    }
+                    checkDisplayBeFormatted()
                 }
-                
-                if displayText.text?.isEmpty == true {
-                    displayText.text = "0"
-                }
-                
-                if displayText.text?.count == 1, displayText.text?.contains("-") == true {
-                    displayText.text = "-0"
-                }
-                checkDisplayBeFormatted()
-                
             default:
                 break
             }
@@ -392,54 +482,78 @@ class ViewController: UIViewController {
     private func numberButtonAction(_ number: Int) {
         playTouchSound()
         isClicked = true
-        if (displayText.text == "0") {
-            displayText.text = ""
-        } else if (displayText.text == "-0") {
-            displayText.text = "-"
+        isNumberClicked = true
+        if (number == 0) {
+            if (isOpperationSelected || isEqualActive) {
+                if (displayText.text != "0" && displayText.text != "-0") {
+                    displayText.text = ""
+                    isOpperationSelected = false
+                    isEqualActive = false
+                    if (hasDisplaySpace()) {
+                        displayText.text? += "0"
+                    }
+                }
+                if (displayText.text == "-0") {
+                    c.setTitle("C", for: .normal)
+                }
+            } else {
+                if (displayText.text != "0" && displayText.text != "-0") {
+                    if (hasDisplaySpace()) {
+                        displayText.text? += "0"
+                    }
+                }
+                if (displayText.text == "-0") {
+                    c.setTitle("C", for: .normal)
+                }
+            }
+        } else {
+            
+            if (displayText.text == "0" || isOpperationSelected || isEqualActive) {
+                displayText.text = ""
+                isOpperationSelected = false
+                isEqualActive = false
+                
+            } else if (displayText.text == "-0") {
+                displayText.text = "-"
+            }
+            
+            c.setTitle("C", for: .normal)
+            if (hasDisplaySpace()) {
+                displayText.text? += String(number)
+            }
         }
-        c.setTitle("C", for: .normal)
-        if (hasDisplaySpace()) {
-            displayText.text! += String(number)
-        }
-        print(number)
         checkDisplayBeFormatted()
+        isOpperationSelected = false
     }
     
     private func cButtonAction() {
         playTouchSound()
+        isOpperationSelected = false
+        isPlusActive = false
+        isMinusActive = false
+        isTimesActive = false
+        isDivideActive = false
+        isItResult = false
+        isNumberClicked = false
         isClicked = false
         c.setTitle("AC", for: .normal)
-        displayText.text! = "0"
-        print("C")
-    }
-    
-    private func number0ButtonAction() {
-        playTouchSound()
-        if (displayText.text != "0" && displayText.text != "-0") {
-            isClicked = true
-            if (hasDisplaySpace()) {
-                displayText.text! += "0"
-            }
-        }
-        if (displayText.text == "-0") {
-            c.setTitle("C", for: .normal)
-        }
-        print("0")
-        checkDisplayBeFormatted()
+        displayText.text = "0"
+        numbers.removeAll()
+        result = 0
     }
     
     private func negetiveNumberButtonAction() {
         playTouchSound()
         
+        
         if (displayText.text?.contains("-") == false) {
             
-            let a = "-" + displayText.text!
+            let a = "-" + (displayText.text ?? "")
             displayText.text = a
         } else {
             displayText.text?.removeFirst()
         }
         
-        print("+/-")
     }
     
     private func percentSignButtonAction() {
@@ -450,41 +564,120 @@ class ViewController: UIViewController {
         
         if (isClicked) {
             c.setTitle("C", for: .normal)
-            let a = Double(removeSeparator(displayNumber: displayText.text!))
-            displayText.text =  String(a / 100)}
-        print("%")
+            let a = removeSeparator(displayNumber: displayText.text ?? "")
+            displayText.text =  formatNumber(a / 100)}
         checkDisplayBeFormatted()
     }
     
     private func dotButtonAction() {
         playTouchSound()
         isClicked = true
-        if (displayText.text?.contains(".") == false && displayText.text!.count < 11) {
+        if (displayText.text?.contains(".") == false && displayText.text?.count ?? 100 < 11) {
             c.setTitle("C", for: .normal)
-            displayText.text! += "."
+            displayText.text? += "."
         }
-        print(".")
         checkDisplayBeFormatted()
     }
     
     private func equalButtonAction() {
         playTouchSound()
+        isEqualActive = true
+        isOpperationSelected = false
+        if (isPlusActive) {
+            numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
+            if (isNumberClicked) {
+                isNumberClicked = false
+                result = numbers.reduce(0, +)
+                displayText.text = formatNumber(result)
+            } else {
+                displayText.text = formatNumber(result)
+                isNumberClicked = false
+            }
+            numbers.removeAll()
+            
+            
+        } else if (isMinusActive) {
+            numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
+            if (isNumberClicked) {
+                isNumberClicked = false
+                result = subtractionArray(numbersForOppration: numbers)
+                displayText.text = formatNumber(result)
+            } else {
+                displayText.text = formatNumber(result)
+                isNumberClicked = false
+            }
+            numbers.removeAll()
+            
+        } else if (isTimesActive) {
+            
+        }
     }
     
     private func plusButtonAction() {
         playTouchSound()
+        if (isMinusActive) {
+            
+            numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
+            
+            isNumberClicked = false
+            result = subtractionArray(numbersForOppration: numbers)
+            displayText.text = formatNumber(result)
+            numbers.removeAll()
+        }
+        
+        if (!isOpperationSelected) {
+            isOpperationSelected = true
+            isPlusActive = true
+            isNumberClicked = false
+            isMinusActive = false
+            isTimesActive = false
+            isDivideActive = false
+            isEqualActive = false
+            numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
+            result = numbers.reduce(0, +)
+            displayText.text = formatNumber(result)
+        }
     }
     
     private func minusButtonAction() {
         playTouchSound()
+        if (isPlusActive) {
+            numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
+            result = numbers.reduce(0, +)
+            displayText.text = formatNumber(result)
+            numbers.removeAll()
+        }
+        if (!isOpperationSelected) {
+            isOpperationSelected = true
+            isPlusActive = false
+            isNumberClicked = false
+            isMinusActive = true
+            isTimesActive = false
+            isDivideActive = false
+            isEqualActive = false
+            numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
+            result = subtractionArray(numbersForOppration: numbers)
+            displayText.text = formatNumber(result)
+        }
+        
     }
     
     private func timesButtonAction() {
         playTouchSound()
+        isOpperationSelected = true
+        isPlusActive = false
+        isMinusActive = false
+        isTimesActive = true
+        isDivideActive = false
     }
     
     private func divideButtonAction() {
         playTouchSound()
+        isOpperationSelected = true
+        isPlusActive = false
+        isMinusActive = false
+        isTimesActive = false
+        isDivideActive = true
     }
     
     @objc private func buttonAction(_ sender: UIButton) {
@@ -509,7 +702,7 @@ class ViewController: UIViewController {
         case number9:
             numberButtonAction(9)
         case number0:
-            number0ButtonAction()
+            numberButtonAction(0)
         case negetiveNumber:
             negetiveNumberButtonAction()
         case percentSign:
