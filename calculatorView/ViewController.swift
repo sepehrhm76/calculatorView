@@ -94,7 +94,7 @@ class CustomButton: UIButton {
         
         if self.point(inside: touchLocation, with: nil) {
             // If the finger is inside the button while panning, highlight it
-            if !isHighlighted {
+            if (!isHighlighted) {
                 highlightButton()
                 isHighlighted = true
             }
@@ -113,7 +113,7 @@ class CustomButton: UIButton {
                     let touchLocationInOtherButton = sender.location(in: otherButton)
                     if otherButton.point(inside: touchLocationInOtherButton, with: nil) {
                         otherButton.highlightButton()
-                        lastButton = otherButton // Update the last button
+                        lastButton = otherButton// Update the last button
                     } else {
                         otherButton.unhighlightButton()
                     }
@@ -124,8 +124,10 @@ class CustomButton: UIButton {
         // If the gesture state ends, perform the action on the last button
         if sender.state == .ended {
             lastButton?.unhighlightButton()
+            lastButton?.sendActions(for: .touchUpInside)
             if isHighlighted {
                 lastButton?.sendActions(for: .touchUpInside)
+                
             }
         }
     }
@@ -610,7 +612,10 @@ class ViewController: UIViewController {
             
         } else if (isTimesActive) {
             
+        } else if (isDivideActive) {
+            
         }
+        
     }
     
     private func plusButtonAction() {
