@@ -179,17 +179,13 @@ class ViewController: UIViewController {
     let display = UIView(frame: CGRect(x: 70, y: 0, width: 380, height: 350))
     lazy var buttonHeight = (view.bounds.height - 580) / 4
     var isClicked = false
-    var isNumberClicked = false
-    var isPlusActive = false
-    var isMinusActive = false
-    var isTimesActive = false
-    var isDivideActive = false
-    var isEqualActive = false
-    var isItResult = false
-    var isOpperationSelected = false
+    var isResult = false
+    var isopperationSelected = false
     var separatorCount = 0
-    var result : Double = 0
-    var numbers: [Double] = []
+    var a : Double? = nil
+    var b : Double? = nil
+    var result : Double? = nil
+    
     
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         get {
@@ -198,22 +194,13 @@ class ViewController: UIViewController {
     }
     
     private func hasDisplaySpace() -> Bool {
-        if let text = displayText.text {
-            if (text.count < 10) {
-                return true
-            } else if (separatorCount == 1 && text.count < 10) {
-                return true
-            } else if (separatorCount == 2 && text.count < 11) {
-                return true
-            } else if (text.contains(".") && separatorCount == 0 && text.count < 10) {
-                return true
-            } else if (text.contains(".") && separatorCount == 1 && text.count < 11) {
-                return true
-            } else if (text.contains(".") && separatorCount == 2 && text.count < 12) {
-                return true
-            }
+        var displayTextWithoutChar = displayText.text?.replacingOccurrences(of: ".", with: "")
+       displayTextWithoutChar = displayTextWithoutChar?.replacingOccurrences(of: ",", with: "")
+        if (displayTextWithoutChar?.count ?? 0) < 9 {
+            return true
+        } else {
+           return false
         }
-        return false
     }
     
     private func removeSeparator(displayNumber: String) -> Double {
@@ -360,7 +347,7 @@ class ViewController: UIViewController {
         if let swipeGesture = gesture as? UISwipeGestureRecognizer {
             switch swipeGesture.direction {
             case .right, .left:
-                if (!isOpperationSelected) {
+        
                     if let text = displayText.text, !text.isEmpty, text != "-0" {
                         displayText.text?.removeLast()
                     } else {
@@ -375,7 +362,7 @@ class ViewController: UIViewController {
                         displayText.text = "-0"
                     }
                     checkDisplayBeFormatted()
-                }
+                
             default:
                 break
             }
@@ -484,21 +471,12 @@ class ViewController: UIViewController {
     private func numberButtonAction(_ number: Int) {
         playTouchSound()
         isClicked = true
-        isNumberClicked = true
+        if (isopperationSelected) {
+            displayText.text = ""
+            isopperationSelected = false
+        }
+        
         if (number == 0) {
-            if (isOpperationSelected || isEqualActive) {
-                if (displayText.text != "0" && displayText.text != "-0") {
-                    displayText.text = ""
-                    isOpperationSelected = false
-                    isEqualActive = false
-                    if (hasDisplaySpace()) {
-                        displayText.text? += "0"
-                    }
-                }
-                if (displayText.text == "-0") {
-                    c.setTitle("C", for: .normal)
-                }
-            } else {
                 if (displayText.text != "0" && displayText.text != "-0") {
                     if (hasDisplaySpace()) {
                         displayText.text? += "0"
@@ -507,13 +485,11 @@ class ViewController: UIViewController {
                 if (displayText.text == "-0") {
                     c.setTitle("C", for: .normal)
                 }
-            }
+            
         } else {
             
-            if (displayText.text == "0" || isOpperationSelected || isEqualActive) {
+            if (displayText.text == "0") {
                 displayText.text = ""
-                isOpperationSelected = false
-                isEqualActive = false
                 
             } else if (displayText.text == "-0") {
                 displayText.text = "-"
@@ -525,23 +501,16 @@ class ViewController: UIViewController {
             }
         }
         checkDisplayBeFormatted()
-        isOpperationSelected = false
     }
     
     private func cButtonAction() {
         playTouchSound()
-        isOpperationSelected = false
-        isPlusActive = false
-        isMinusActive = false
-        isTimesActive = false
-        isDivideActive = false
-        isItResult = false
-        isNumberClicked = false
         isClicked = false
         c.setTitle("AC", for: .normal)
         displayText.text = "0"
-        numbers.removeAll()
-        result = 0
+        a = nil
+        b = nil
+        result = nil
     }
     
     private func negetiveNumberButtonAction() {
@@ -583,106 +552,52 @@ class ViewController: UIViewController {
     
     private func equalButtonAction() {
         playTouchSound()
-        isEqualActive = true
-        isOpperationSelected = false
-        if (isPlusActive) {
-            numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
-            if (isNumberClicked) {
-                isNumberClicked = false
-                result = numbers.reduce(0, +)
-                displayText.text = formatNumber(result)
-            } else {
-                displayText.text = formatNumber(result)
-                isNumberClicked = false
-            }
-            numbers.removeAll()
-            
-            
-        } else if (isMinusActive) {
-            numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
-            if (isNumberClicked) {
-                isNumberClicked = false
-                result = subtractionArray(numbersForOppration: numbers)
-                displayText.text = formatNumber(result)
-            } else {
-                displayText.text = formatNumber(result)
-                isNumberClicked = false
-            }
-            numbers.removeAll()
-            
-        } else if (isTimesActive) {
-            
-        } else if (isDivideActive) {
-            
+        if (!isResult) {
+            plusButtonAction()
+            isResult = true
+        } else {
+            result = removeSeparator(displayNumber: displayText.text ?? "")
+            result! += b ?? 0
+            displayText.text = formatNumber(result ?? 0)
         }
-        
+    
     }
     
     private func plusButtonAction() {
         playTouchSound()
-        if (isMinusActive) {
-            
-            numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
-            
-            isNumberClicked = false
-            result = subtractionArray(numbersForOppration: numbers)
-            displayText.text = formatNumber(result)
-            numbers.removeAll()
+        if (isResult) {
+            result = nil
+            a = removeSeparator(displayNumber: displayText.text ?? "")
+            b = nil
         }
-        
-        if (!isOpperationSelected) {
-            isOpperationSelected = true
-            isPlusActive = true
-            isNumberClicked = false
-            isMinusActive = false
-            isTimesActive = false
-            isDivideActive = false
-            isEqualActive = false
-            numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
-            result = numbers.reduce(0, +)
-            displayText.text = formatNumber(result)
+        isResult = false
+        if (!isopperationSelected) {
+            isopperationSelected = true
+            if (a == nil) {
+                a = removeSeparator(displayNumber: displayText.text ?? "")
+            } else {
+                b = removeSeparator(displayNumber: displayText.text ?? "")
+            }
+            
+            result = (a ?? 0) + (b ?? 0)
+            displayText.text = formatNumber(result ?? 0)
+            a = result
         }
     }
     
     private func minusButtonAction() {
         playTouchSound()
-        if (isPlusActive) {
-            numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
-            result = numbers.reduce(0, +)
-            displayText.text = formatNumber(result)
-            numbers.removeAll()
-        }
-        if (!isOpperationSelected) {
-            isOpperationSelected = true
-            isPlusActive = false
-            isNumberClicked = false
-            isMinusActive = true
-            isTimesActive = false
-            isDivideActive = false
-            isEqualActive = false
-            numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
-            result = subtractionArray(numbersForOppration: numbers)
-            displayText.text = formatNumber(result)
-        }
-        
+       
     }
     
     private func timesButtonAction() {
         playTouchSound()
-        isOpperationSelected = true
-        isPlusActive = false
-        isMinusActive = false
-        isTimesActive = true
-        isDivideActive = false
+    
     }
     
     private func divideButtonAction() {
         playTouchSound()
-        isOpperationSelected = true
-        isPlusActive = false
-        isMinusActive = false
-        isTimesActive = false
-        isDivideActive = true
+        
     }
     
     @objc private func buttonAction(_ sender: UIButton) {
