@@ -3,29 +3,6 @@
 //  calculatorView
 //
 //  Created by sepehr hajimohammadi on 10/4/23.
-//                                    allFunc     insideFunc
-//
-// UIButton                             ✅           ❌
-// UIColor                              ✅           ❌
-// CGFloat                              ✅           ❌
-// CGSize                               ✅           ❌
-// CGRect                               ✅           ❌
-// UITouch
-// UIEvent
-// UIView
-// UIFont
-// UIViewController
-// UITextField
-// UIGestureRecognizer
-// UISwipeGestureRecognizer
-// NSLayoutConstraint
-// UIEdgeInsets
-
-// NumberFormatter
-// fatalError
-// Selector
-// NSCoder
-
 import UIKit
 import AudioToolbox
 
@@ -172,15 +149,6 @@ class CustomNumberButton: CustomButton {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-}
-
-enum Operations : String {
-    case plus = "+"
-    case minus = "-"
-    case times = "*"
-    case divide = "/"
-    case non = ""
-    
 }
 
 class ViewController: UIViewController {
