@@ -133,7 +133,6 @@ class CustomButton: UIButton {
     }
 }
 
-
 class CustomGrayButton: CustomButton {
     let grayButtonColor = #colorLiteral(red: 0.6470588446, green: 0.6470588446, blue: 0.6470588446, alpha: 1)
     let animationGrayColor = #colorLiteral(red: 0.8509804606, green: 0.850980401, blue: 0.850980401, alpha: 1)
@@ -175,16 +174,28 @@ class CustomNumberButton: CustomButton {
     }
 }
 
+enum Operations : String {
+    case plus = "+"
+    case minus = "-"
+    case times = "*"
+    case divide = "/"
+    case non = ""
+    
+}
+
 class ViewController: UIViewController {
     let display = UIView(frame: CGRect(x: 70, y: 0, width: 380, height: 350))
     lazy var buttonHeight = (view.bounds.height - 580) / 4
     var isClicked = false
-    var isResult = false
     var isopperationSelected = false
+    var canNumberRemove = true
     var separatorCount = 0
-    var a : Double? = nil
-    var b : Double? = nil
-    var result : Double? = nil
+    var numbers : [Double] = []
+    var operations : [String] = []
+    var all : [String] = []
+    var arrayNumbers : String?
+    var leftNumber : Double? = nil
+    var rightNumber : Double? = nil
     
     
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
@@ -195,11 +206,11 @@ class ViewController: UIViewController {
     
     private func hasDisplaySpace() -> Bool {
         var displayTextWithoutChar = displayText.text?.replacingOccurrences(of: ".", with: "")
-       displayTextWithoutChar = displayTextWithoutChar?.replacingOccurrences(of: ",", with: "")
+        displayTextWithoutChar = displayTextWithoutChar?.replacingOccurrences(of: ",", with: "")
         if (displayTextWithoutChar?.count ?? 0) < 9 {
             return true
         } else {
-           return false
+            return false
         }
     }
     
@@ -209,21 +220,7 @@ class ViewController: UIViewController {
         return displayNumberToDouble ?? 0
     }
     
-    private func subtractionArray(numbersForOppration: [Double]) -> Double {
-        guard !numbersForOppration.isEmpty else {
-            return 0
-        }
-        
-        var result = numbersForOppration[0]
-        
-        for i in 1..<numbersForOppration.count {
-            result -= numbersForOppration[i]
-        }
-        
-        return result
-    }
-    
-    func formatNumber(_ number: Double) -> String {
+    private func formatNumber(_ number: Double) -> String {
         let numberFormatter = NumberFormatter()
         numberFormatter.numberStyle = .decimal
         
@@ -247,6 +244,7 @@ class ViewController: UIViewController {
             separatorCount = (displayText.text?.filter { $0 == "," }.count)!
         }
     }
+    
     private func playTouchSound() {
         AudioServicesPlaySystemSound(1104)
     }
@@ -347,7 +345,7 @@ class ViewController: UIViewController {
         if let swipeGesture = gesture as? UISwipeGestureRecognizer {
             switch swipeGesture.direction {
             case .right, .left:
-        
+                if (canNumberRemove) {
                     if let text = displayText.text, !text.isEmpty, text != "-0" {
                         displayText.text?.removeLast()
                     } else {
@@ -362,10 +360,11 @@ class ViewController: UIViewController {
                         displayText.text = "-0"
                     }
                     checkDisplayBeFormatted()
-                
+                }
             default:
                 break
             }
+            
         }
     }
     
@@ -471,20 +470,21 @@ class ViewController: UIViewController {
     private func numberButtonAction(_ number: Int) {
         playTouchSound()
         isClicked = true
+        canNumberRemove = true
         if (isopperationSelected) {
             displayText.text = ""
             isopperationSelected = false
         }
         
         if (number == 0) {
-                if (displayText.text != "0" && displayText.text != "-0") {
-                    if (hasDisplaySpace()) {
-                        displayText.text? += "0"
-                    }
+            if (displayText.text != "0" && displayText.text != "-0") {
+                if (hasDisplaySpace()) {
+                    displayText.text? += "0"
                 }
-                if (displayText.text == "-0") {
-                    c.setTitle("C", for: .normal)
-                }
+            }
+            if (displayText.text == "-0") {
+                c.setTitle("C", for: .normal)
+            }
             
         } else {
             
@@ -508,9 +508,10 @@ class ViewController: UIViewController {
         isClicked = false
         c.setTitle("AC", for: .normal)
         displayText.text = "0"
-        a = nil
-        b = nil
-        result = nil
+        all.removeAll()
+        numbers.removeAll()
+        operations.removeAll()
+        isopperationSelected = false
     }
     
     private func negetiveNumberButtonAction() {
@@ -518,7 +519,6 @@ class ViewController: UIViewController {
         
         
         if (displayText.text?.contains("-") == false) {
-            
             let a = "-" + (displayText.text ?? "")
             displayText.text = a
         } else {
@@ -552,53 +552,93 @@ class ViewController: UIViewController {
     
     private func equalButtonAction() {
         playTouchSound()
-        if (!isResult) {
-            plusButtonAction()
-            isResult = true
-        } else {
-            result = removeSeparator(displayNumber: displayText.text ?? "")
-            result! += b ?? 0
-            displayText.text = formatNumber(result ?? 0)
-        }
-    
+        canNumberRemove = false
+        all.append(String(removeSeparator(displayNumber: displayText.text ?? "")))
+        let a = performMultiplicationAndDivision(all)
+        displayText.text = formatNumber(calculateResult(a) ?? 0)
+        all.removeAll()
+        numbers.removeAll()
+        operations.removeAll()   
     }
     
-    private func plusButtonAction() {
+    private func operationPressed(operation: String) {
         playTouchSound()
-        if (isResult) {
-            result = nil
-            a = removeSeparator(displayNumber: displayText.text ?? "")
-            b = nil
-        }
-        isResult = false
-        if (!isopperationSelected) {
-            isopperationSelected = true
-            if (a == nil) {
-                a = removeSeparator(displayNumber: displayText.text ?? "")
-            } else {
-                b = removeSeparator(displayNumber: displayText.text ?? "")
-            }
-            
-            result = (a ?? 0) + (b ?? 0)
-            displayText.text = formatNumber(result ?? 0)
-            a = result
-        }
-    }
-    
-    private func minusButtonAction() {
-        playTouchSound()
-       
-    }
-    
-    private func timesButtonAction() {
-        playTouchSound()
-    
-    }
-    
-    private func divideButtonAction() {
-        playTouchSound()
+        canNumberRemove = false
+        numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
+        operations.append(operation)
         
+        if (!isopperationSelected) {
+            all.append(String(numbers.last ?? 0))
+            all.append(operations.last ?? "")
+            isopperationSelected = true
+        } else if (isopperationSelected && all.last != operation) {
+            all.removeLast()
+            all.append(operations.last ?? "")
+        }
+        if (operation == "+" || operation == "-") {
+            displayText.text = formatNumber(calculateResult(all) ?? 0)
+        } else if (operation == "*" || operation == "/") {
+            var arrayCount = all.count
+            var twoLastIndex = arrayCount - 2
+            displayText.text = formatNumber(Double(all[twoLastIndex]) ?? 0)
+        }
+        isopperationSelected = true
     }
+
+    func performMultiplicationAndDivision(_ input: [String]) -> [String] {
+        var output: [String] = []
+        var accumulator: Double? = nil
+
+        for token in input {
+            if let number = Double(token) {
+                if let currentAccumulator = accumulator {
+                    accumulator = nil
+                    if output.last == "*" {
+                        output.removeLast()
+                        output.append(String(currentAccumulator * number))
+                    } else if output.last == "/" {
+                        output.removeLast()
+                        output.append(String(currentAccumulator / number))
+                    }
+                } else {
+                    output.append(token)
+                }
+            } else if token == "*" || token == "/" {
+                if accumulator == nil {
+                    accumulator = Double(output.removeLast())
+                }
+                output.append(token)
+            } else {
+                output.append(token)
+            }
+        }
+
+        return output
+    }
+
+    func calculateResult(_ input: [String]) -> Double? {
+        guard !input.isEmpty else {
+            return nil
+        }
+        
+        var result: Double = 0
+        var operation: String = "+"
+        
+        for token in input {
+            if let number = Double(token) {
+                if operation == "+" {
+                    result += number
+                } else if operation == "-" {
+                    result -= number
+                }
+            } else if token == "+" || token == "-" {
+                operation = token
+            }
+        }
+        
+        return result
+    }
+
     
     @objc private func buttonAction(_ sender: UIButton) {
         
@@ -634,20 +674,15 @@ class ViewController: UIViewController {
         case equal:
             equalButtonAction()
         case plus:
-            plusButtonAction()
+            operationPressed(operation: "+")
         case minus:
-            minusButtonAction()
+            operationPressed(operation: "-")
         case times:
-            timesButtonAction()
+            operationPressed(operation: "*")
         case divide:
-            divideButtonAction()
+            operationPressed(operation: "/")
         default:
             return
         }
     }
 }
-
-
-
-
-
