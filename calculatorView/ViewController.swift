@@ -554,8 +554,8 @@ class ViewController: UIViewController {
         playTouchSound()
         canNumberRemove = false
         all.append(String(removeSeparator(displayNumber: displayText.text ?? "")))
-        let a = performMultiplicationAndDivision(all)
-        displayText.text = formatNumber(calculateResult(a) ?? 0)
+        let a = calculateResult(all)
+        displayText.text = formatNumber(a ?? 0)
         all.removeAll()
         numbers.removeAll()
         operations.removeAll()   
@@ -585,7 +585,7 @@ class ViewController: UIViewController {
         isopperationSelected = true
     }
 
-    func performMultiplicationAndDivision(_ input: [String]) -> [String] {
+    func calculateResult(_ input: [String]) -> Double? {
         var output: [String] = []
         var accumulator: Double? = nil
 
@@ -612,19 +612,13 @@ class ViewController: UIViewController {
                 output.append(token)
             }
         }
-
-        return output
-    }
-
-    func calculateResult(_ input: [String]) -> Double? {
-        guard !input.isEmpty else {
+        guard !output.isEmpty else {
             return nil
         }
-        
         var result: Double = 0
         var operation: String = "+"
         
-        for token in input {
+        for token in output {
             if let number = Double(token) {
                 if operation == "+" {
                     result += number
@@ -635,10 +629,9 @@ class ViewController: UIViewController {
                 operation = token
             }
         }
-        
+
         return result
     }
-
     
     @objc private func buttonAction(_ sender: UIButton) {
         
