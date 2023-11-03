@@ -156,15 +156,13 @@ class ViewController: UIViewController {
     lazy var buttonHeight = (view.bounds.height - 580) / 4
     var isClicked = false
     var isopperationSelected = false
+    var isResult = false
     var canNumberRemove = true
     var separatorCount = 0
     var numbers : [Double] = []
     var operations : [String] = []
     var all : [String] = []
-    var arrayNumbers : String?
-    var leftNumber : Double? = nil
-    var rightNumber : Double? = nil
-    
+    var allCopy : [String] = []
     
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         get {
@@ -439,9 +437,10 @@ class ViewController: UIViewController {
         playTouchSound()
         isClicked = true
         canNumberRemove = true
-        if (isopperationSelected) {
+        if (isopperationSelected || isResult) {
             displayText.text = ""
             isopperationSelected = false
+            isResult = false
         }
         
         if (number == 0) {
@@ -479,7 +478,9 @@ class ViewController: UIViewController {
         all.removeAll()
         numbers.removeAll()
         operations.removeAll()
+        allCopy.removeAll()
         isopperationSelected = false
+        isResult = false
     }
     
     private func negetiveNumberButtonAction() {
@@ -516,47 +517,72 @@ class ViewController: UIViewController {
             displayText.text? += "."
         }
         checkDisplayBeFormatted()
+        
     }
     
     private func equalButtonAction() {
         playTouchSound()
         canNumberRemove = false
-        all.append(String(removeSeparator(displayNumber: displayText.text ?? "")))
-        let a = calculateResult(all)
-        displayText.text = formatNumber(a ?? 0)
-        all.removeAll()
-        numbers.removeAll()
-        operations.removeAll()   
+        isopperationSelected = false
+        
+        if (!isResult) {
+            all.append(String(removeSeparator(displayNumber: displayText.text ?? "")))
+            allCopy.append(contentsOf: all)
+            if (formatNumber(calculateResult(all) ?? 0) != "+∞") {
+                displayText.text = formatNumber(calculateResult(all) ?? 0)
+            } else {
+                displayText.text = "Error"
+            }
+            all.removeAll()
+            numbers.removeAll()
+            operations.removeAll()
+            isResult = true
+            print(allCopy)
+        } else if (isResult && displayText.text != "Error") {
+            print(allCopy)
+            let allCopyLast = allCopy.last
+            let allCopyOperationElement = allCopy.count - 2
+            let lastOperation = allCopy[allCopyOperationElement]
+            allCopy.removeAll()
+            allCopy.append(String(removeSeparator(displayNumber: displayText.text ?? "")))
+            allCopy.append(lastOperation)
+            allCopy.append(allCopyLast ?? "")
+            if (hasDisplaySpace()) {
+                displayText.text = formatNumber(calculateResult(allCopy) ?? 0)
+            }
+        }
     }
     
     private func operationPressed(operation: String) {
         playTouchSound()
         canNumberRemove = false
-        numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
-        operations.append(operation)
-        
-        if (!isopperationSelected) {
-            all.append(String(numbers.last ?? 0))
-            all.append(operations.last ?? "")
+        if (displayText.text != "Error") {
+            isResult = false
+            numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
+            operations.append(operation)
+            if (!isopperationSelected) {
+                all.append(String(numbers.last ?? 0))
+                all.append(operations.last ?? "")
+                isopperationSelected = true
+            } else if (isopperationSelected && all.last != operation) {
+                all.removeLast()
+                all.append(operations.last ?? "")
+            }
+            if (operation == "+" || operation == "-") {
+                displayText.text = formatNumber(calculateResult(all) ?? 0)
+            } else if (operation == "*" || operation == "/") {
+                let arrayCount = all.count
+                let twoLastIndex = arrayCount - 2
+                displayText.text = formatNumber(Double(all[twoLastIndex]) ?? 0)
+            }
             isopperationSelected = true
-        } else if (isopperationSelected && all.last != operation) {
-            all.removeLast()
-            all.append(operations.last ?? "")
         }
-        if (operation == "+" || operation == "-") {
-            displayText.text = formatNumber(calculateResult(all) ?? 0)
-        } else if (operation == "*" || operation == "/") {
-            var arrayCount = all.count
-            var twoLastIndex = arrayCount - 2
-            displayText.text = formatNumber(Double(all[twoLastIndex]) ?? 0)
-        }
-        isopperationSelected = true
     }
-
+    
     func calculateResult(_ input: [String]) -> Double? {
         var output: [String] = []
         var accumulator: Double? = nil
-
+        
         for token in input {
             if let number = Double(token) {
                 if let currentAccumulator = accumulator {
@@ -597,7 +623,6 @@ class ViewController: UIViewController {
                 operation = token
             }
         }
-
         return result
     }
     
