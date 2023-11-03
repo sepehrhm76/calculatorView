@@ -159,8 +159,6 @@ class ViewController: UIViewController {
     var isResult = false
     var canNumberRemove = true
     var separatorCount = 0
-    var numbers : [Double] = []
-    var operations : [String] = []
     var all : [String] = []
     var allCopy : [String] = []
     
@@ -176,14 +174,14 @@ class ViewController: UIViewController {
         if (displayTextWithoutChar?.count ?? 0) < 9 {
             return true
         } else {
+            displayText.text = "Out of space"
             return false
         }
     }
     
-    private func removeSeparator(displayNumber: String) -> Double {
+    private func removeSeparator(displayNumber: String) -> String {
         let displayTextWithoutSeparator = displayText.text?.replacingOccurrences(of: ",", with: "")
-        let displayNumberToDouble = Double(displayTextWithoutSeparator ?? "")
-        return displayNumberToDouble ?? 0
+        return displayTextWithoutSeparator ?? ""
     }
     
     private func formatNumber(_ number: Double) -> String {
@@ -476,8 +474,6 @@ class ViewController: UIViewController {
         c.setTitle("AC", for: .normal)
         displayText.text = "0"
         all.removeAll()
-        numbers.removeAll()
-        operations.removeAll()
         allCopy.removeAll()
         isopperationSelected = false
         isResult = false
@@ -485,15 +481,14 @@ class ViewController: UIViewController {
     
     private func negetiveNumberButtonAction() {
         playTouchSound()
-        
-        
-        if (displayText.text?.contains("-") == false) {
-            let a = "-" + (displayText.text ?? "")
-            displayText.text = a
-        } else {
-            displayText.text?.removeFirst()
+        if (displayText.text != "Error" && displayText.text != "Out of space") {
+            if (displayText.text?.contains("-") == false) {
+                let a = "-" + (displayText.text ?? "")
+                displayText.text = a
+            } else {
+                displayText.text?.removeFirst()
+            }
         }
-        
     }
     
     private func percentSignButtonAction() {
@@ -501,45 +496,45 @@ class ViewController: UIViewController {
         if (displayText.text == "-0") {
             displayText.text = "0"
         }
-        
         if (isClicked) {
             c.setTitle("C", for: .normal)
             let a = removeSeparator(displayNumber: displayText.text ?? "")
-            displayText.text =  formatNumber(a / 100)}
-        checkDisplayBeFormatted()
+            checkDisplayBeFormatted()
+            if (hasDisplaySpace()) {
+                displayText.text =  formatNumber((Double(a) ?? 0) / 100)}
+            canNumberRemove = false
+        }
     }
     
     private func dotButtonAction() {
         playTouchSound()
         isClicked = true
-        if (displayText.text?.contains(".") == false && displayText.text?.count ?? 100 < 11) {
-            c.setTitle("C", for: .normal)
-            displayText.text? += "."
+        if (displayText.text != "Error" && displayText.text != "Out of space") {
+            if (displayText.text?.contains(".") == false && displayText.text?.count ?? 100 < 11) {
+                c.setTitle("C", for: .normal)
+                displayText.text? += "."
+            }
         }
         checkDisplayBeFormatted()
-        
     }
     
     private func equalButtonAction() {
         playTouchSound()
         canNumberRemove = false
         isopperationSelected = false
-        
         if (!isResult) {
             all.append(String(removeSeparator(displayNumber: displayText.text ?? "")))
             allCopy.append(contentsOf: all)
             if (formatNumber(calculateResult(all) ?? 0) != "+∞") {
-                displayText.text = formatNumber(calculateResult(all) ?? 0)
+                if (hasDisplaySpace()) {
+                    displayText.text = formatNumber(calculateResult(all) ?? 0)
+                }
             } else {
                 displayText.text = "Error"
             }
             all.removeAll()
-            numbers.removeAll()
-            operations.removeAll()
             isResult = true
-            print(allCopy)
-        } else if (isResult && displayText.text != "Error") {
-            print(allCopy)
+        } else if (isResult && displayText.text != "Error" || displayText.text != "Out of space") {
             let allCopyLast = allCopy.last
             let allCopyOperationElement = allCopy.count - 2
             let lastOperation = allCopy[allCopyOperationElement]
@@ -556,18 +551,17 @@ class ViewController: UIViewController {
     private func operationPressed(operation: String) {
         playTouchSound()
         canNumberRemove = false
-        if (displayText.text != "Error") {
+        if (displayText.text != "Error" && displayText.text != "Out of space") {
             isResult = false
-            numbers.append(removeSeparator(displayNumber: displayText.text ?? ""))
-            operations.append(operation)
             if (!isopperationSelected) {
-                all.append(String(numbers.last ?? 0))
-                all.append(operations.last ?? "")
+                all.append(removeSeparator(displayNumber: displayText.text ?? ""))
+                all.append(operation)
                 isopperationSelected = true
             } else if (isopperationSelected && all.last != operation) {
                 all.removeLast()
-                all.append(operations.last ?? "")
+                all.append(operation)
             }
+            displayText.text = formatNumber(calculateResult(all) ?? 0)
             if (operation == "+" || operation == "-") {
                 displayText.text = formatNumber(calculateResult(all) ?? 0)
             } else if (operation == "*" || operation == "/") {
