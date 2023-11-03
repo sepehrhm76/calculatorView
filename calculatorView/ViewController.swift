@@ -174,7 +174,6 @@ class ViewController: UIViewController {
         if (displayTextWithoutChar?.count ?? 0) < 9 {
             return true
         } else {
-            displayText.text = "Out of space"
             return false
         }
     }
@@ -220,7 +219,7 @@ class ViewController: UIViewController {
         text.text = "0"
         text.textAlignment = .right
         text.tintColor = UIColor.clear
-        text.font = UIFont.systemFont(ofSize: CGFloat(90), weight: .thin)
+        text.font = UIFont.systemFont(ofSize: 93, weight: .thin)
         text.adjustsFontSizeToFitWidth = true
         text.isUserInteractionEnabled = false
         return text
@@ -526,9 +525,9 @@ class ViewController: UIViewController {
             all.append(String(removeSeparator(displayNumber: displayText.text ?? "")))
             allCopy.append(contentsOf: all)
             if (formatNumber(calculateResult(all) ?? 0) != "+∞") {
-                if (hasDisplaySpace()) {
-                    displayText.text = formatNumber(calculateResult(all) ?? 0)
-                }
+                
+                displayText.text = formatNumber(calculateResult(all) ?? 0)
+                
             } else {
                 displayText.text = "Error"
             }
@@ -544,6 +543,8 @@ class ViewController: UIViewController {
             allCopy.append(allCopyLast ?? "")
             if (hasDisplaySpace()) {
                 displayText.text = formatNumber(calculateResult(allCopy) ?? 0)
+            } else {
+                displayText.text = "Out of space"
             }
         }
     }
