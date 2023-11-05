@@ -158,6 +158,7 @@ class ViewController: UIViewController {
     var isopperationSelected = false
     var isResult = false
     var canNumberRemove = true
+    var isCActive = false
     var separatorCount = 0
     var all : [String] = []
     var allCopy : [String] = []
@@ -169,12 +170,21 @@ class ViewController: UIViewController {
     }
     
     private func hasDisplaySpace() -> Bool {
-        var displayTextWithoutChar = displayText.text?.replacingOccurrences(of: ".", with: "")
-        displayTextWithoutChar = displayTextWithoutChar?.replacingOccurrences(of: ",", with: "")
-        if (displayTextWithoutChar?.count ?? 0) < 9 {
-            return true
+        var displayTextWithoutChar =  displayText.text ?? ""
+        displayTextWithoutChar = displayTextWithoutChar.replacingOccurrences(of: ".", with: "")
+        displayTextWithoutChar = displayTextWithoutChar.replacingOccurrences(of: "-", with: "")
+        if (isClicked) {
+            if (displayTextWithoutChar.count) <= 10 {
+                return true
+            } else {
+                return false
+            }
         } else {
-            return false
+            if (displayTextWithoutChar.count) <= 11 {
+                return true
+            } else {
+                return false
+            }
         }
     }
     
@@ -433,6 +443,7 @@ class ViewController: UIViewController {
     private func numberButtonAction(_ number: Int) {
         playTouchSound()
         isClicked = true
+        isCActive = false
         canNumberRemove = true
         if (isopperationSelected || isResult) {
             displayText.text = ""
@@ -469,18 +480,30 @@ class ViewController: UIViewController {
     
     private func cButtonAction() {
         playTouchSound()
-        isClicked = false
+        if (!isCActive) {
+            isCActive = true
+            if (isopperationSelected) {
+                isopperationSelected = false
+            }
+        } else {
+            isCActive = false
+            all.removeAll()
+            allCopy.removeAll()
+            isopperationSelected = false
+        }
         c.setTitle("AC", for: .normal)
         displayText.text = "0"
-        all.removeAll()
-        allCopy.removeAll()
-        isopperationSelected = false
+        isClicked = false
         isResult = false
     }
     
     private func negetiveNumberButtonAction() {
         playTouchSound()
         if (displayText.text != "Error" && displayText.text != "Out of space") {
+            if (isopperationSelected) {
+                displayText.text = "0"
+                isopperationSelected = false
+            }
             if (displayText.text?.contains("-") == false) {
                 let a = "-" + (displayText.text ?? "")
                 displayText.text = a
@@ -492,6 +515,7 @@ class ViewController: UIViewController {
     
     private func percentSignButtonAction() {
         playTouchSound()
+        isopperationSelected = true
         if (displayText.text == "-0") {
             displayText.text = "0"
         }
@@ -509,7 +533,12 @@ class ViewController: UIViewController {
         playTouchSound()
         isClicked = true
         if (displayText.text != "Error" && displayText.text != "Out of space") {
-            if (displayText.text?.contains(".") == false && displayText.text?.count ?? 100 < 11) {
+            if (isopperationSelected || isResult) {
+                displayText.text = "0."
+                isResult = false
+                isopperationSelected = false
+            }
+            if (displayText.text?.contains(".") == false && hasDisplaySpace()) {
                 c.setTitle("C", for: .normal)
                 displayText.text? += "."
             }
@@ -519,15 +548,16 @@ class ViewController: UIViewController {
     
     private func equalButtonAction() {
         playTouchSound()
+        isClicked = false
         canNumberRemove = false
         isopperationSelected = false
         if (!isResult) {
             all.append(String(removeSeparator(displayNumber: displayText.text ?? "")))
             allCopy.append(contentsOf: all)
             if (formatNumber(calculateResult(all) ?? 0) != "+∞") {
-                
-                displayText.text = formatNumber(calculateResult(all) ?? 0)
-                
+                if (hasDisplaySpace()) {
+                    displayText.text = formatNumber(calculateResult(all) ?? 0)
+                }
             } else {
                 displayText.text = "Error"
             }
@@ -535,16 +565,16 @@ class ViewController: UIViewController {
             isResult = true
         } else if (isResult && displayText.text != "Error" || displayText.text != "Out of space") {
             let allCopyLast = allCopy.last
-            let allCopyOperationElement = allCopy.count - 2
-            let lastOperation = allCopy[allCopyOperationElement]
-            allCopy.removeAll()
-            allCopy.append(String(removeSeparator(displayNumber: displayText.text ?? "")))
-            allCopy.append(lastOperation)
-            allCopy.append(allCopyLast ?? "")
+            if (allCopy.count >= 2) {
+                let allCopyOperationElement = allCopy.count - 2
+                let lastOperation = allCopy[allCopyOperationElement]
+                allCopy.removeAll()
+                allCopy.append(String(removeSeparator(displayNumber: displayText.text ?? "")))
+                allCopy.append(lastOperation)
+                allCopy.append(allCopyLast ?? "")
+            }
             if (hasDisplaySpace()) {
                 displayText.text = formatNumber(calculateResult(allCopy) ?? 0)
-            } else {
-                displayText.text = "Out of space"
             }
         }
     }
@@ -552,6 +582,7 @@ class ViewController: UIViewController {
     private func operationPressed(operation: String) {
         playTouchSound()
         canNumberRemove = false
+        isCActive = false
         if (displayText.text != "Error" && displayText.text != "Out of space") {
             isResult = false
             if (!isopperationSelected) {
@@ -563,13 +594,6 @@ class ViewController: UIViewController {
                 all.append(operation)
             }
             displayText.text = formatNumber(calculateResult(all) ?? 0)
-            if (operation == "+" || operation == "-") {
-                displayText.text = formatNumber(calculateResult(all) ?? 0)
-            } else if (operation == "*" || operation == "/") {
-                let arrayCount = all.count
-                let twoLastIndex = arrayCount - 2
-                displayText.text = formatNumber(Double(all[twoLastIndex]) ?? 0)
-            }
             isopperationSelected = true
         }
     }
@@ -577,15 +601,14 @@ class ViewController: UIViewController {
     func calculateResult(_ input: [String]) -> Double? {
         var output: [String] = []
         var accumulator: Double? = nil
-        
         for token in input {
             if let number = Double(token) {
                 if let currentAccumulator = accumulator {
                     accumulator = nil
-                    if output.last == "*" {
+                    if (output.last == "*") {
                         output.removeLast()
                         output.append(String(currentAccumulator * number))
-                    } else if output.last == "/" {
+                    } else if (output.last == "/") {
                         output.removeLast()
                         output.append(String(currentAccumulator / number))
                     }
@@ -593,7 +616,7 @@ class ViewController: UIViewController {
                     output.append(token)
                 }
             } else if token == "*" || token == "/" {
-                if accumulator == nil {
+                if (accumulator == nil) {
                     accumulator = Double(output.removeLast())
                 }
                 output.append(token)
@@ -601,6 +624,7 @@ class ViewController: UIViewController {
                 output.append(token)
             }
         }
+        
         guard !output.isEmpty else {
             return nil
         }
@@ -609,14 +633,17 @@ class ViewController: UIViewController {
         
         for token in output {
             if let number = Double(token) {
-                if operation == "+" {
+                if (operation == "+") {
                     result += number
-                } else if operation == "-" {
+                } else if (operation == "-") {
                     result -= number
                 }
-            } else if token == "+" || token == "-" {
+            } else if (token == "+" || token == "-") {
                 operation = token
             }
+        }
+        if (accumulator != nil) {
+            result = accumulator ?? 0
         }
         return result
     }
